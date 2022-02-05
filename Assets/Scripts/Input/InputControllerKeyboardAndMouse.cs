@@ -98,8 +98,10 @@ namespace TankShooter.Battle
             {
                 cameraMoveDelta.Value = mouseDelta;
             }
-
-            targetPoint.Value = GetTargetWorldPoint();
+            else
+            {
+                targetPoint.Value = GetTargetWorldPoint();
+            }
         }
 
         private void HandleKeyboardInput()
