@@ -26,9 +26,15 @@ namespace TankShooter.Battle
         IReadonlyReactiveProperty<bool> ICameraInputController.CameraMove => cameraMove;
         IReadonlyReactiveProperty<Vector2> ICameraInputController.CameraMoveDelta => cameraMoveDelta;
         
+        public event Action DoReloadingWeaponEvent;
         public event Action DoSelectPrevWeaponEvent;
         public event Action DoSelectNextWeaponEvent;
         public event Action<int> DoSelectWeaponEvent;
+
+        protected void DoReloadingWeapon()
+        {
+            DoReloadingWeaponEvent?.Invoke();
+        }
 
         protected void DoSelectPrevWeapon()
         {

@@ -54,6 +54,8 @@ namespace TankShooter.Battle
         /// </summary>
         IReadonlyReactiveProperty<bool> Shooting { get; }
 
+        event Action DoReloadingWeaponEvent;
+
         /// <summary>
         /// событие для выбора предыдущего оружия
         /// </summary>

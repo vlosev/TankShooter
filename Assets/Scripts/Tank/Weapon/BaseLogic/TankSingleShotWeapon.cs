@@ -1,13 +1,21 @@
+using Tank.Interfaces;
+using UnityEngine;
+
 namespace TankShooter.Battle
 {
     public class TankSingleShotWeapon : TankWeapon
     {
-        // public TankSingleShotWeapon(ITank tank) : base(tank)
-        // {
-        // }
-        public override void Init(ITank tank)
+        public void Init(ITank tank)
         {
-            throw new System.NotImplementedException();
+            //do nothing
+        }
+
+        public override void OnShootingChanged(bool isShooting)
+        {
+            if (isShooting)
+            {
+                Debug.Log($"Do singleshot weapon '{GetType().Name}' shot!");
+            }
         }
     }
 }

@@ -94,6 +94,11 @@ namespace TankShooter.Battle
             {
                 DoSelectNextWeapon();
             }
+
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                DoReloadingWeapon();
+            }
         }
 
         private Vector3 GetTargetWorldPoint()
