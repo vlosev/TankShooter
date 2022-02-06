@@ -1,6 +1,10 @@
 using System;
+using Tank.Interfaces;
+using Tank.Weapon;
 using TankShooter.Battle.TankCode;
 using TankShooter.Common;
+using TankShooter.Game;
+using TankShooter.Game.Enemy;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -13,20 +17,24 @@ namespace TankShooter.Battle
         public float MaxTurnSpeed = 5f;
     }
     
-    public class Tank : MonoBehaviour,
+    public class Tank : NotifiableMonoBehaviour,
+        ITankInputControllerHandler,
         ITank
     {
-        private IInputController inputController;
+        private ITankInputController inputController;
+        private ITankModule[] tankModules;
 
+        [Header("references")]
         [SerializeField] private Rigidbody tankRigidbody;
+        [SerializeField] private TankWeaponManager weaponManager;
+        
+        [Header("gameplay parameters")]
         [SerializeField] private Transform centerOfMass;
-
-        [SerializeField] private TankTrack rightTrack;
 
         #region ITank implementation
         Rigidbody ITank.Rigidbody => tankRigidbody;
         
-        IInputController ITank.InputContoller => inputController;
+        ITankInputController ITank.InputController => inputController;
         #endregion
 
         //TODO: сделать загрузку и настройку
@@ -37,19 +45,25 @@ namespace TankShooter.Battle
             MaxTurnSpeed = 3
         };
 
-        private void Awake()
+        protected override void SafeAwake()
         {
+            base.SafeAwake();
+            
             tankRigidbody.centerOfMass = centerOfMass.localPosition;
+            tankModules = GetComponentsInChildren<ITankModule>(true);
+            foreach (var module in tankModules)
+            {
+                module.Init(this);
+            }
         }
 
-        public void Setup(IInputController inputController)
+        public void BindInputController(ITankInputController tankInputController)
         {
-            this.inputController = inputController;
-
-            var modules = GetComponentsInChildren<ITankModule>(true);
-            foreach (var module in modules)
+            inputController = tankInputController;
+            foreach (var module in tankModules)
             {
-                module.SetupModule(this);
+                if (module is ITankInputControllerHandler inputControllerHandler)
+                    inputControllerHandler.BindInputController(tankInputController);
             }
         }
     }

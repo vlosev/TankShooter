@@ -1,12 +1,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Tank.Interfaces;
 using TankShooter.Common;
 using UnityEngine;
 
 namespace TankShooter.Battle.TankCode
 {
-    public class TankTracksPlatform : NotifiableMonoBehaviour, IPhysicsBeforeTickListener, ITankModule
+    public class TankTracksPlatform : NotifiableMonoBehaviour,
+        IPhysicsBeforeTickListener,
+        ITankModule,
+        ITankInputControllerHandler
     {
         [Header("...physics settings")] 
         [SerializeField] private float minBrakeTorque = 100f;
@@ -24,7 +28,7 @@ namespace TankShooter.Battle.TankCode
 
         //reference to parent
         private ITank tank;
-        private IInputController inputController;
+        private ITankInputController tankInputController;
         private Rigidbody rigidbody;
         
         private float acceleration;
@@ -37,13 +41,17 @@ namespace TankShooter.Battle.TankCode
             BattleTimeMachine.SubscribePhysicsBeforeTick(this).SubscribeToDispose(this);
         }
         
-        public void SetupModule(ITank tank)
+        public void Init(ITank tank)
         {
             this.tank = tank;
             this.rigidbody = tank.Rigidbody;
-            
-            tank.InputContoller.Acceleration.SubscribeChanged(value => acceleration = value, true).SubscribeToDispose(this);
-            tank.InputContoller.Steering.SubscribeChanged(value => steering = value, true).SubscribeToDispose(this);
+        }
+
+        public void BindInputController(ITankInputController tankInputController)
+        {
+            this.tankInputController = tankInputController;
+            tankInputController.Acceleration.SubscribeChanged(value => acceleration = value, true).SubscribeToDispose(this);
+            tankInputController.Steering.SubscribeChanged(value => steering = value, true).SubscribeToDispose(this);
         }
 
         public void OnBeforePhysicsTick(float dt)

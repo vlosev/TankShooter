@@ -8,7 +8,8 @@ using UnityEngine.Serialization;
 
 namespace TankShooter.Battle
 {
-    public class CameraController : NotifiableMonoBehaviour
+    public class CameraController : NotifiableMonoBehaviour,
+        ICameraInputControllerHandler
     {
         [FormerlySerializedAs("camera")]
         [Header("...references")]
@@ -78,18 +79,21 @@ namespace TankShooter.Battle
             cameraHolderTransform.forward = forward;
         }
 
-        public void SetInputController(IInputController inputController)
+        public void BindInputController(ICameraInputController inputController)
         {
-            inputController.CameraMoveDelta.SubscribeChanged(offset =>
-            {
-                cameraAngleX = Mathf.Clamp(cameraAngleX + offset.y * cameraSensetive, minCamAngleX, maxCamAngleX);
-                cameraAngleY = Mathf.Repeat(cameraAngleY + offset.x * cameraSensetive, 360);
-            }, true).SubscribeToDispose(this);
+            inputController.CameraMoveDelta.SubscribeChanged(OnCameraMoveDeltaChanged).SubscribeToDispose(this);
+            inputController.CameraZoomDelta.SubscribeChanged(OnCameraZoomDeltaChanged).SubscribeToDispose(this);
+        }
 
-            inputController.CameraZoomDelta.SubscribeChanged(zoomDelta =>
-            {
-                zoomTargetValue = Mathf.Clamp01(zoomTargetValue - zoomDelta * zoomSensetive);
-            }).SubscribeToDispose(this);
+        private void OnCameraMoveDeltaChanged(Vector2 delta)
+        {
+            cameraAngleX = Mathf.Clamp(cameraAngleX + delta.y * cameraSensetive, minCamAngleX, maxCamAngleX);
+            cameraAngleY = Mathf.Repeat(cameraAngleY + delta.x * cameraSensetive, 360);
+        }
+
+        private void OnCameraZoomDeltaChanged(float delta)
+        {
+            zoomTargetValue = Mathf.Clamp01(zoomTargetValue - delta * zoomSensetive);
         }
     }
 }
