@@ -4,7 +4,34 @@ using UnityEngine;
 
 namespace TankShooter.Battle
 {
-    public interface IInputController
+    public interface IInputControllerHandler<in T>
+    {
+        void BindInputController(T inputController);
+    }
+    
+    public interface ITankInputControllerHandler : IInputControllerHandler<ITankInputController> { }
+
+    public interface ICameraInputControllerHandler : IInputControllerHandler<ICameraInputController> { }
+
+    public interface ICameraInputController
+    {
+        /// <summary>
+        /// дельта изменения зума, например, колесиком или двумя пальцами для тача
+        /// </summary>
+        IReadonlyReactiveProperty<float> CameraZoomDelta { get; }
+        
+        /// <summary>
+        /// флаг для передвижения камеры, например нажат джойстик или зажата правая кнопка мыши
+        /// </summary>
+        IReadonlyReactiveProperty<bool> CameraMove { get; }
+
+        /// <summary>
+        /// сообщает насколько сдвинулась камера
+        /// </summary>
+        IReadonlyReactiveProperty<Vector2> CameraMoveDelta { get; }
+    }
+    
+    public interface ITankInputController
     {
         /// <summary>
         /// скорость движения танка, которая передается от контроллера
@@ -21,45 +48,25 @@ namespace TankShooter.Battle
         /// точка, куда должен целиться танк
         /// </summary>
         IReadonlyReactiveProperty<Vector3> TargetPoint { get; }
-        
-        /// <summary>
-        /// дельта изменения зума, например, колесиком или двумя пальцами для тача
-        /// </summary>
-        IReadonlyReactiveProperty<float> CameraZoomDelta { get; }
 
         /// <summary>
         /// свойство, которое говорит, что кнопка выстрела зажата, нужно, например, для пулемета
         /// </summary>
         IReadonlyReactiveProperty<bool> Shooting { get; }
-        
-        /// <summary>
-        /// флаг для передвижения камеры, например нажат джойстик или зажата правая кнопка мыши
-        /// </summary>
-        IReadonlyReactiveProperty<bool> CameraMove { get; }
-        
-        /// <summary>
-        /// сообщает насколько сдвинулась камера
-        /// </summary>
-        IReadonlyReactiveProperty<Vector2> CameraMoveDelta { get; }
-
-        /// <summary>
-        /// событие для выстрела
-        /// </summary>
-        event Action DoShot;
 
         /// <summary>
         /// событие для выбора предыдущего оружия
         /// </summary>
-        event Action DoSelectPrevWeapon;
+        event Action DoSelectPrevWeaponEvent;
 
         /// <summary>
         /// событие для выбора следующего оружия
         /// </summary>
-        event Action DoSelectNextWeapon;
+        event Action DoSelectNextWeaponEvent;
 
         /// <summary>
         /// событие для выбора оружия по индексу
         /// </summary>
-        event Action<int> DoSelectWeapon;
+        event Action<int> DoSelectWeaponEvent;
     }
 }

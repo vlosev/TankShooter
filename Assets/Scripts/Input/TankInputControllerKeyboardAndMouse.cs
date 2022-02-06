@@ -5,17 +5,9 @@ using UnityEngineInternal;
 
 namespace TankShooter.Battle
 {
-    public class InputControllerKeyboardAndMouse : NotifiableMonoBehaviour, IInputController
+    public class TankInputControllerKeyboardAndMouse : InputController
     {
         [SerializeField] private Camera playerCamera;
-
-        private readonly ReactiveProperty<float> acceleration = new ReactiveProperty<float>();
-        private readonly ReactiveProperty<float> steering = new ReactiveProperty<float>();
-        private readonly ReactiveProperty<bool> shooting = new ReactiveProperty<bool>();
-        private readonly ReactiveProperty<Vector3> targetPoint = new ReactiveProperty<Vector3>();
-        private readonly ReactiveProperty<bool> cameraMove = new ReactiveProperty<bool>();
-        private readonly ReactiveProperty<float> cameraZoomDelta = new ReactiveProperty<float>();
-        private readonly ReactiveProperty<Vector2> cameraMoveDelta = new ReactiveProperty<Vector2>();
 
         private Camera PlayerCamera
         {
@@ -38,24 +30,10 @@ namespace TankShooter.Battle
             }
         }
 
-        public IReadonlyReactiveProperty<float> Acceleration => acceleration;
-        public IReadonlyReactiveProperty<float> Steering => steering;
-        public IReadonlyReactiveProperty<bool> Shooting => shooting;
-        public IReadonlyReactiveProperty<Vector3> TargetPoint => targetPoint;
-        public IReadonlyReactiveProperty<bool> CameraMove => cameraMove;
-        public IReadonlyReactiveProperty<float> CameraZoomDelta => cameraZoomDelta;
-        public IReadonlyReactiveProperty<Vector2> CameraMoveDelta => cameraMoveDelta;
-
-        public event Action DoShot;
-        public event Action DoSelectPrevWeapon;
-        public event Action DoSelectNextWeapon;
-        public event Action<int> DoSelectWeapon;
-
         protected override void SafeAwake()
         {
             base.SafeAwake();
 
-            shooting.SubscribeChanged(OnShootingChanged).SubscribeToDispose(this);
             cameraMove.SubscribeChanged(OnCameraMoveChanged).SubscribeToDispose(this);
         }
 
@@ -73,23 +51,21 @@ namespace TankShooter.Battle
             }
         }
 
-        private void OnShootingChanged(bool isShooting)
-        {
-            if (isShooting)
-            {
-                DoShot?.Invoke();
-            }
-        }
-
         private void Update()
         {
+            GetShotButton();
             HandleKeyboardInput();
             HandleMouseInput();
         }
 
+        //это особый случай, чтобы не менять свойство дважды, хендлится так
+        private void GetShotButton()
+        {
+            shooting.Value = Input.GetKey(KeyCode.X) || Input.GetMouseButton(0);
+        }
+
         private void HandleMouseInput()
         {
-            shooting.Value = Input.GetMouseButton(0);
             cameraMove.Value = Input.GetMouseButton(1);
             cameraZoomDelta.Value = Input.mouseScrollDelta.y;
             
@@ -109,16 +85,14 @@ namespace TankShooter.Battle
             acceleration.Value = Input.GetAxis("Vertical");
             steering.Value = Input.GetAxis("Horizontal");
 
-            shooting.Value = Input.GetKey(KeyCode.X); 
-
             if (Input.GetKeyDown(KeyCode.Q))
             {
-                DoSelectPrevWeapon?.Invoke();
+                DoSelectPrevWeapon();
             }
 
             if (Input.GetKeyDown(KeyCode.E))
             {
-                DoSelectNextWeapon?.Invoke();
+                DoSelectNextWeapon();
             }
         }
 
