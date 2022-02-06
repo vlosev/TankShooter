@@ -1,19 +1,18 @@
+using Tank.Interfaces;
 using TankShooter.Battle;
+using TankShooter.Game;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace TankShooter
+namespace TankShooter.Battle
 {
     public class BattleContext : MonoBehaviour
     {
         [SerializeField] private Tank playerTank;
-        [SerializeField] private InputControllerKeyboardAndMouse playerInput;
-        [SerializeField] private CameraController cameraController;
 
-        private void Start()
+        public void StartBattle(LevelContext levelContext)
         {
-            playerTank.Setup(playerInput);
-            cameraController.SetInputController(playerInput);
+            playerTank.BindInputController(levelContext.PlayerInputController);
         }
     }
 }
