@@ -2,53 +2,38 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TankShooter.Common;
+using TankShooter.Common.FSM;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace TankShooter.Game.Enemy
 {
     public abstract class EnemyAI : NotifiableMonoBehaviour
     {
-        protected abstract class EnemyAIState
+        protected class EnemyAIState : FsmState<EnemyAI>
         {
-            protected readonly EnemyAI AI;
-            
-            protected EnemyAIState(EnemyAI ai)
+            public EnemyAIState(EnemyAI entity) : base(entity)
             {
-                this.AI = ai;
             }
-
-            public virtual void OnEnter() { }
-
-            public virtual EnemyAIState OnTick(float dt)
-            {
-                return this;
-            }
-            
-            public virtual void OnLeave() { }
         }
 
-        private EnemyAIState state;
-        
-        protected override void SafeAwake()
+        [SerializeField] private NavMeshAgent agent;
+
+        private Fsm<EnemyAI> fsm;
+
+        public float DeltaTime => Time.deltaTime;
+        public NavMeshAgent Agent => agent;
+
+        public void StartEnemy()
         {
-            base.SafeAwake();
-            state = GetInitialAIState();
+            fsm = new Fsm<EnemyAI>(GetInitialAIState());
         }
 
         private void Update()
         {
-            if (state != null)
-            {
-                var newState = state.OnTick(Time.deltaTime);
-                if (ReferenceEquals(state, newState) != true)
-                {
-                    state.OnLeave();
-                    state = newState;
-                    state.OnEnter();
-                }
-            }
+            fsm.Update();
         }
-        
+
         //создает стартовый стейт врага и потом дальше стейт машина переключает стейты,
         //получая следующей стейт из текущего
         protected abstract EnemyAIState GetInitialAIState();

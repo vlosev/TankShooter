@@ -1,3 +1,6 @@
+using TankShooter.Common.FSM;
+using UnityEngine;
+
 namespace TankShooter.Game.Enemy
 {
     /// <summary>
@@ -15,6 +18,11 @@ namespace TankShooter.Game.Enemy
         {
             public StateInit(EnemyAI ai) : base(ai)
             {
+            }
+
+            public override FsmState<EnemyAI> Update()
+            {
+                return new StateAgro(Entity);
             }
         }
         

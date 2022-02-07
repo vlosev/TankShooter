@@ -30,7 +30,7 @@ namespace TankShooter.Game
             var prefabs = enemySpawnPoints.SelectMany(i => i.GetPrefabs()).Distinct();
             foreach (var prefab in prefabs)
             {
-                enemiesPool.RegisterObject(prefab, maxEnemiesOnLevel);
+                enemiesPool.RegisterObject(transform, prefab, maxEnemiesOnLevel);
             }
             
             //спавним все 
@@ -48,19 +48,31 @@ namespace TankShooter.Game
                 if (timeToSpawn < 0)
                 {
                     needToSpawnEnemiesCount--;
-                    
-                    
                 }
             }
         }
 
         private void SpawnEnemiesOnStart()
         {
+            var rnd = Random.Range(0, enemySpawnPoints.Length - 1);
+
+            CreateEnemy(enemySpawnPoints[rnd]);
         }
         
-        private void CreateEnemy(EnemyEntity prefab)
+        private void CreateEnemy(EnemySpawnPoint spawnPoint)
         {
-            var inst = Instantiate(prefab);
+            var enemyInstance = enemiesPool.InstantiateFromPool(spawnPoint.GetPrefab());
+
+            var enemyTransform = enemyInstance.transform;
+            
+            enemyTransform.SetParent(spawnPoint.SpawnPointTransform);
+            enemyTransform.position = spawnPoint.SpawnPointTransform.position;
+            enemyInstance.gameObject.SetActive(true);
+
+            if (enemyInstance.TryGetComponent<EnemyEntity>(out var entity))
+            {
+                entity.AI.StartEnemy();
+            }
         }
 
         private void OnDeadEnemy(EnemyEntity enemy)

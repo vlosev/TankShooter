@@ -1,3 +1,7 @@
+using TankShooter.Battle;
+using TankShooter.Common.FSM;
+using UnityEngine;
+
 namespace TankShooter.Game.Enemy
 {
     /// <summary>
@@ -9,7 +13,14 @@ namespace TankShooter.Game.Enemy
     {
         protected override EnemyAIState GetInitialAIState()
         {
-            throw new System.NotImplementedException();
+            return new StateInit(this);
+        }
+        
+        private class StateInit : EnemyAIState
+        {
+            public StateInit(EnemyAI ai) : base(ai)
+            {
+            }
         }
     }
 }

@@ -1,30 +1,46 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-namespace TankShooter.Common.StateMachine
+namespace TankShooter.Common.FSM
 {
-    public abstract class FsmState
+    public abstract class FsmState<TStateEntity>
     {
-        public virtual void OnEnter()
+        protected readonly TStateEntity Entity;
+        
+        protected FsmState(TStateEntity entity)
         {
+            Entity = entity;
         }
 
-        public virtual FsmState Update()
+        public virtual void OnEnter() { }
+
+        public virtual FsmState<TStateEntity> Update()
         {
             return this;
         }
 
-        public virtual void OnLeave()
-        {
-        }
+        public virtual void OnLeave() { }
     }
     
-    public class Fsm<TState>
+    public class Fsm<TEntityState>
     {
-        void RegisterState<TState>(TState state)
-            where TState : FsmState
+        private FsmState<TEntityState> state;
+
+        public Fsm(FsmState<TEntityState> state)
         {
+            this.state = state;
+            state?.OnEnter();
+        }
+
+        public void Update()
+        {
+            if (state != null)
+            {
+                var newState = state.Update();
+                if (ReferenceEquals(state, newState) != true)
+                {
+                    state.OnLeave();
+                    state = newState;
+                    state.OnEnter();
+                }
+            }
         }
     }
 }
