@@ -13,10 +13,30 @@ namespace Common
             return TryGetComponentInChildren(parentComponent.gameObject, out component, includeInactive);
         }
 
-        public static bool TryGetComponentInChildren<T>(this GameObject parentGameObject, out T component, bool includeInactive = false)
+        public static bool TryGetComponentsInChildren<T>(this Component parentComponent, out T[] components, bool includeInactive = false)
             where T : Component
         {
-            return (component = parentGameObject?.GetComponentInChildren<T>(includeInactive)) ?? false;
+            return TryGetComponentsInChildren(parentComponent.gameObject, out components, includeInactive);
+        }
+
+        public static bool TryGetComponentInChildren<T>(this GameObject gameObject, out T component, bool includeInactive = false)
+            where T : Component
+        {
+            if (gameObject != null)
+            {
+                component = gameObject.GetComponentInChildren<T>(includeInactive);
+                return component != null;
+            }
+
+            component = null;
+            return false;
+        }
+
+        public static bool TryGetComponentsInChildren<T>(this GameObject gameObject, out T[] components, bool includeInactive = false)
+            where T : Component
+        {
+            components = gameObject.GetComponentsInChildren<T>(includeInactive);
+            return components?.Length != 0;
         }
     }
 }
