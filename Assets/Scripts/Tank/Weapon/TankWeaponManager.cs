@@ -17,18 +17,33 @@ namespace Tank.Weapon
 
         public void Init(ITank tank)
         {
+            foreach (var weapon in weapons)
+            {
+                weapon.Init(this);
+            }
+            
             SetWeapon(0);
         }
 
-        public void BindInputController(ITankInputController tankInputController)
+        public void BindInputController(ITankInputController inputController)
         {
-            this.tankInputController = tankInputController;
+            //отписываемся сразу на всякий случай
+            if (tankInputController != null)
+            {
+                UnbindInputFromWeapon();
+                tankInputController.DoSelectNextWeaponEvent -= SelectNextWeapon;
+                tankInputController.DoSelectPrevWeaponEvent -= SelectPrevWeapon;
+                tankInputController.DoSelectWeaponEvent -= SelectWeapon;
+                tankInputController = null;
+            }
+            
+            //подписываемся/переподписываемся
+            tankInputController = inputController;
             if (tankInputController != null)
             {
                 tankInputController.DoSelectNextWeaponEvent += SelectNextWeapon;
                 tankInputController.DoSelectPrevWeaponEvent += SelectPrevWeapon;
                 tankInputController.DoSelectWeaponEvent += SelectWeapon;
-
                 BindInputToWeapon();
             }
         }
@@ -68,17 +83,13 @@ namespace Tank.Weapon
         private void UnbindInputFromWeapon()
         {
             if (currentWeapon != null)
-            {
                 currentWeapon.BindInputController(null);
-            }
         }
 
         private void BindInputToWeapon()
         {
             if (currentWeapon != null)
-            {
                 currentWeapon.BindInputController(tankInputController);
-            }
         }
     }
 }

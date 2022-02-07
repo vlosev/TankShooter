@@ -5,6 +5,21 @@ namespace TankShooter.Battle
 {
     public class TankSingleShotWeapon : TankWeapon
     {
+        protected bool isShot = false;
+        // public bool IsShot
+        // {
+        //     get
+        //     {
+        //         if (isShot)
+        //         {
+        //             isShot = false;
+        //             return true;
+        //         }
+        //
+        //         return false;
+        //     }
+        // }
+        
         public void Init(ITank tank)
         {
             //do nothing
@@ -14,7 +29,7 @@ namespace TankShooter.Battle
         {
             if (isShooting)
             {
-                Debug.Log($"Do singleshot weapon '{GetType().Name}' shot!");
+                isShot = true;
             }
         }
     }

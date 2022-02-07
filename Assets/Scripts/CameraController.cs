@@ -50,39 +50,45 @@ namespace TankShooter.Battle
         private float cameraAngleX;
         private float cameraAngleY;
 
-        private void Update()
+        private void Start()
         {
-            var dt = Time.smoothDeltaTime;
-            
-            // считаем зум по колесику мыши
-            zoomValue = Mathf.Lerp(zoomValue, zoomTargetValue, dt * zoomSmoothTime);
-            
-            //считаем реальное расстояние, на которое нужно двигать камеру
-            zoomDistance = Mathf.Lerp(zoomMinDistance, zoomMaxDistance, zoomValue);
+            ComputeCameraZoom(1);
+            ComputeCameraRotationAndTranslation(1);
         }
 
         private void LateUpdate()
         {
             var dt = Time.smoothDeltaTime;
-            var cameraPosition = transform.position;
-            var targetPosition = targetTransform.position;
-
-            //двигаем таргет, куда смотрит камера за танком
-            transform.position = Vector3.Lerp(cameraPosition, targetPosition, dt * moveSmoothTime);
-            
-            //считаем кватернион для поворота камеры относительно targetPoint
-            var quat = Quaternion.Euler(cameraAngleX, cameraAngleY, 0);
-            var forward = quat * new Vector3(0, 0, 1);
-            
-            //двигаем камеру плавно по времени, она будет как бы бесконечно приближаться к таргет значению
-            cameraHolderTransform.localPosition = -forward * zoomDistance;
-            cameraHolderTransform.forward = forward;
+            ComputeCameraZoom(dt * zoomSmoothTime);
+            ComputeCameraRotationAndTranslation(dt * moveSmoothTime);
         }
 
         public void BindInputController(ICameraInputController inputController)
         {
-            inputController.CameraMoveDelta.SubscribeChanged(OnCameraMoveDeltaChanged).SubscribeToDispose(this);
+            inputController.CameraMoveDelta.SubscribeChanged(OnCameraMoveDeltaChanged, true).SubscribeToDispose(this);
             inputController.CameraZoomDelta.SubscribeChanged(OnCameraZoomDeltaChanged).SubscribeToDispose(this);
+        }
+
+        private void ComputeCameraZoom(float deltaTime)
+        {
+            zoomValue = Mathf.Lerp(zoomValue, zoomTargetValue, deltaTime); // считаем зум по колесику мыши
+            zoomDistance = Mathf.Lerp(zoomMinDistance, zoomMaxDistance, zoomValue); //считаем реальное расстояние, на которое нужно двигать камеру
+        }
+        
+        private void ComputeCameraRotationAndTranslation(float deltaTime)
+        {
+            var cameraPosition = transform.position;
+            var targetPosition = targetTransform.position;
+
+            //двигаем таргет, куда смотрит камера за танком
+            transform.position = Vector3.Lerp(cameraPosition, targetPosition, deltaTime);
+            
+            //считаем направление камеры, куда ее нужно сдвинуть относительно точки наблюдения
+            var forward = Quaternion.Euler(cameraAngleX, cameraAngleY, 0) * new Vector3(0, 0, 1);
+            
+            //двигаем камеру плавно по времени, она будет как бы бесконечно приближаться к таргет значению
+            cameraHolderTransform.localPosition = -forward * zoomDistance;
+            cameraHolderTransform.forward = forward;
         }
 
         private void OnCameraMoveDeltaChanged(Vector2 delta)

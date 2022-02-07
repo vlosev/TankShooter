@@ -53,9 +53,9 @@ namespace TankShooter.Battle.TankCode
 
             public override FsmState<Gun> Update()
             {
-                if (Entity.doShot)
+                if (Entity.isShot)
                 {
-                    Entity.doShot = false;
+                    Entity.isShot = false;
                     return new GunShot(Entity);
                 }
                 
@@ -74,7 +74,6 @@ namespace TankShooter.Battle.TankCode
 
             public override void OnEnter()
             {
-                Entity.doShot = false;
                 Entity.state.Value = WeaponState.Shot;
                 prepareToShotTime = 0f;
             }
@@ -124,7 +123,6 @@ namespace TankShooter.Battle.TankCode
         private float shotTime = 0.5f;
         private float reloadTime = 5;
         private int availableShots = 1;
-        private bool doShot;
         private Fsm<Gun> fsm;
 
         public override void Init(TankWeaponManager tankWeaponManager)
@@ -141,17 +139,12 @@ namespace TankShooter.Battle.TankCode
 
         private void PlayShotSound()
         {
-            Debug.Log($"Gun play shot sound");
+            shotAudioSource.Play();
         }
 
         private void PlayShotEffect()
         {
             Debug.Log($"Gun play shot effect");
-        }
-
-        private void DoShot()
-        {
-            doShot = true;
         }
     }
 }
