@@ -1,9 +1,7 @@
-using System;
 using TankShooter.Common;
 using UnityEngine;
-using UnityEngineInternal;
 
-namespace TankShooter.Battle
+namespace TankShooter.GameInput
 {
     public class TankInputControllerKeyboardAndMouse : InputController
     {

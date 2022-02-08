@@ -2,7 +2,7 @@ using System;
 using TankShooter.Common;
 using UnityEngine;
 
-namespace TankShooter.Battle
+namespace TankShooter.GameInput
 {
     public abstract class InputController : NotifiableMonoBehaviour, ITankInputController, ICameraInputController
     {
