@@ -13,50 +13,50 @@ namespace TankShooter.Battle.TankCode
         public float ReloadTime = 2;
     }
     
-    public class Gun : TankSingleShotWeapon
+    public class TankWeaponBaseGun : TankSingleShotWeaponBase
     {
         #region fsm
-        private class GunState : FsmState<Gun>
+        private class GunState : FsmState<TankWeaponBaseGun>
         {
-            protected GunState(Gun entity) : base(entity) { }
+            protected GunState(TankWeaponBaseGun entity) : base(entity) { }
         }
 
         private class GunInit : GunState
         {
-            public GunInit(Gun entity) : base(entity)
+            public GunInit(TankWeaponBaseGun entity) : base(entity)
             {
                 Debug.Log("enter state init");
             }
 
             public override void OnEnter()
             {
-                Entity.state.Value = WeaponState.NotAvailable;
+                entity.state.Value = WeaponState.NotAvailable;
             }
 
-            public override FsmState<Gun> Update()
+            public override FsmState<TankWeaponBaseGun> Update()
             {
-                return new GunIdle(Entity);
+                return new GunIdle(entity);
             }
         }
         
         private class GunIdle : GunState
         {
-            public GunIdle(Gun entity) : base(entity)
+            public GunIdle(TankWeaponBaseGun entity) : base(entity)
             {
                 Debug.Log("enter state idle");
             }
 
             public override void OnEnter()
             {
-                Entity.state.Value = WeaponState.Idle;
+                entity.state.Value = WeaponState.Idle;
             }
 
-            public override FsmState<Gun> Update()
+            public override FsmState<TankWeaponBaseGun> Update()
             {
-                if (Entity.isShot)
+                if (entity.isShot)
                 {
-                    Entity.isShot = false;
-                    return new GunShot(Entity);
+                    entity.isShot = false;
+                    return new GunShot(entity);
                 }
                 
                 return base.Update();
@@ -67,29 +67,29 @@ namespace TankShooter.Battle.TankCode
         {
             private float prepareToShotTime;
             
-            public GunShot(Gun entity) : base(entity)
+            public GunShot(TankWeaponBaseGun entity) : base(entity)
             {
                 Debug.Log("enter state shot");
             }
 
             public override void OnEnter()
             {
-                Entity.state.Value = WeaponState.Shot;
+                entity.state.Value = WeaponState.Shot;
                 prepareToShotTime = 0f;
             }
 
-            public override FsmState<Gun> Update()
+            public override FsmState<TankWeaponBaseGun> Update()
             {
                 //ждем какое-то время
                 prepareToShotTime += Time.deltaTime;
-                if (prepareToShotTime < Entity.shotTime)
+                if (prepareToShotTime < entity.shotTime)
                 {
                     return this;
                 }
                 
-                Entity.PlayShotEffect();
-                Entity.PlayShotSound();
-                return new GunReload(Entity);
+                entity.PlayShotEffect();
+                entity.PlayShotSound();
+                return new GunReload(entity);
             }
         }
         
@@ -97,19 +97,19 @@ namespace TankShooter.Battle.TankCode
         {
             private float reloadTime;
             
-            public GunReload(Gun entity) : base(entity)
+            public GunReload(TankWeaponBaseGun entity) : base(entity)
             {
             }
 
-            public override FsmState<Gun> Update()
+            public override FsmState<TankWeaponBaseGun> Update()
             {
                 reloadTime += Time.deltaTime;
-                if (reloadTime >= Entity.reloadTime)
+                if (reloadTime >= entity.reloadTime)
                 {
-                    return new GunIdle(Entity);
+                    return new GunIdle(entity);
                 }
 
-                var t = Mathf.Clamp01(reloadTime / Entity.reloadTime);
+                var t = Mathf.Clamp01(reloadTime / entity.reloadTime);
                 Debug.Log($"Reloading progress = {t}");
                 return this;
             }
@@ -123,13 +123,15 @@ namespace TankShooter.Battle.TankCode
         private float shotTime = 0.5f;
         private float reloadTime = 5;
         private int availableShots = 1;
-        private Fsm<Gun> fsm;
+        private Fsm<TankWeaponBaseGun> fsm;
+
+        public override TankWeaponSlotName SlotName => TankWeaponSlotName.Gun;
 
         public override void Init(TankWeaponManager tankWeaponManager)
         {
             base.Init(tankWeaponManager);
             
-            fsm = new Fsm<Gun>(new GunInit(this));
+            fsm = new Fsm<TankWeaponBaseGun>(new GunInit(this));
         }
 
         private void Update()

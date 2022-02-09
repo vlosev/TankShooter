@@ -1,4 +1,4 @@
-using TankShooter.Battle;
+using TankShooter.GameInput;
 using UnityEngine;
 
 namespace Tank.Interfaces
@@ -8,7 +8,16 @@ namespace Tank.Interfaces
     /// </summary>
     public interface ITank
     {
+        Transform Transform { get; }
         Rigidbody Rigidbody { get; }
         ITankInputController InputController { get; }
+    }
+    
+    /// <summary>
+    /// интерфейс модуля танка необходим для того, чтобы танк мог инициализировать все необходимое нужными данными
+    /// </summary>
+    public interface ITankModule
+    {
+        void Init(ITank tank);
     }
 }

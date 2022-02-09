@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9892a13eee6cf459c908ba8535dd9d4f, type: 3}
+  m_Name: tank_constructor_data
+  m_EditorClassIdentifier: 
+  modules:
+    bodies:
+    - {fileID: 2011186526069096055, guid: 5919c443ff8d645449895e4e4fcd478d, type: 3}
+    turrets:
+    - {fileID: 6671998854265688151, guid: a14c6b798b89b4d3b98908555a929b12, type: 3}
+    - {fileID: 6671998854265688151, guid: 81c223dd2b1b14a03b0552bea4f8f582, type: 3}
+    chassis:
+    - {fileID: 5268186701053196020, guid: 637ba0280086d41ff817a2e46ad50fa1, type: 3}
+  weaponData:
+  - slotName: 0
+    weapons:
+    - {fileID: 1996674146903504079, guid: b0ac0002a41894b2393aedc8b4d10a11, type: 3}
+    - {fileID: 1254054912772197532, guid: bde9742ed0bf2433cb0a4242ee910066, type: 3}
+    - {fileID: 1254054912772197532, guid: e7a95013a2fd24a808a033058c9f4f57, type: 3}
+  - slotName: 1
+    weapons:
+    - {fileID: 1996674146903504079, guid: b0ac0002a41894b2393aedc8b4d10a11, type: 3}
+  - slotName: 2
+    weapons:
+    - {fileID: 1996674146903504079, guid: b0ac0002a41894b2393aedc8b4d10a11, type: 3}

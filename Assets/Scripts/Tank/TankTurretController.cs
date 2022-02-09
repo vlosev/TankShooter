@@ -1,8 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Common;
 using Tank.Interfaces;
 using TankShooter.Common;
+using TankShooter.GameInput;
 using UnityEngine;
 
 namespace TankShooter.Battle.TankCode
@@ -20,11 +23,10 @@ namespace TankShooter.Battle.TankCode
         [SerializeField] private float maxGunAngle = 20f;
         [Tooltip("скорость наклона/поднятия пушки градусов/сек")] 
         [SerializeField] private float turnGunSpeed = 10f;
-
-        [SerializeField] private Transform turretPivot;
         [SerializeField] private Transform gunPivot;
-        [SerializeField] private Transform gunShotPosition;
 
+        private TankWeaponSlot gunSlot;
+        private Transform selfTransform;
         private Vector3 targetWorldPoint;
         
         private Quaternion turretTargetRotation;
@@ -41,7 +43,7 @@ namespace TankShooter.Battle.TankCode
         
         public void Init(ITank tank)
         {
-            //do nothing
+            selfTransform = transform;
         }
 
         public void BindInputController(ITankInputController tankInputController)
@@ -52,21 +54,21 @@ namespace TankShooter.Battle.TankCode
         private void UpdateTurretDirection(Vector3 targetWorldPoint, float dt)
         {
             //находим точку, куда относительно башни смотрим и вращаем башню туда
-            var currentRotation = turretPivot.localRotation;
-            var currentPosition = turretPivot.transform.position;
+            var currentRotation = selfTransform.localRotation;
+            var currentPosition = selfTransform.transform.position;
             targetWorldPoint.y = currentPosition.y; //башню поворачиваем в плоскости XoZ
             
             var targetDirection = (targetWorldPoint - currentPosition).normalized;
             var localDirection = transform.InverseTransformDirection(targetDirection);
             if (localDirection.sqrMagnitude > 0f)
             {
-                turretTargetRotation.SetLookRotation(localDirection, turretPivot.up);
+                turretTargetRotation.SetLookRotation(localDirection, selfTransform.up);
                 currentRotation = Quaternion.RotateTowards(currentRotation, turretTargetRotation, dt * rotationTurrentSpeed);
                 currentRotation.eulerAngles = new Vector3(0, currentRotation.eulerAngles.y, 0); //убираем накапливаемую ошибку
-                turretPivot.localRotation = currentRotation;
+                selfTransform.localRotation = currentRotation;
 
 #if UNITY_EDITOR
-                Debug.DrawLine(currentPosition, currentPosition + turretPivot.forward * 10f, Color.yellow, 0, false);
+                Debug.DrawLine(currentPosition, currentPosition + selfTransform.forward * 10f, Color.yellow, 0, false);
                 Debug.DrawLine(currentPosition, currentPosition + targetDirection * 10f, Color.green, 0, false);
 #endif
             }
@@ -87,10 +89,10 @@ namespace TankShooter.Battle.TankCode
             //находим точку, куда относительно башни должно быть направлено оружие и вращаем туда
             var currentRotation = gunPivot.localRotation;
             var targetDirection = (gunTargetPoint - currentPosition).normalized;
-            var localDirection = turretPivot.InverseTransformDirection(targetDirection);
+            var localDirection = selfTransform.InverseTransformDirection(targetDirection);
             if (localDirection.sqrMagnitude > 0f)
             {
-                gunTargetRotation.SetLookRotation(localDirection, turretPivot.up);
+                gunTargetRotation.SetLookRotation(localDirection, selfTransform.up);
 
                 var targetQuat = Quaternion.RotateTowards(currentRotation, gunTargetRotation, dt * turnGunSpeed);
                 targetQuat.Normalize();

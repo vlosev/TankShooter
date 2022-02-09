@@ -1,14 +1,13 @@
 using System;
+using System.Runtime.InteropServices;
+using Common;
 using Tank.Interfaces;
 using Tank.Weapon;
-using TankShooter.Battle.TankCode;
 using TankShooter.Common;
-using TankShooter.Game;
-using TankShooter.Game.Enemy;
+using TankShooter.GameInput;
 using UnityEngine;
-using UnityEngine.Serialization;
 
-namespace TankShooter.Battle
+namespace TankShooter.Tank
 {
     [Serializable]
     public class TankSettings
@@ -17,13 +16,16 @@ namespace TankShooter.Battle
         public float MaxTurnSpeed = 5f;
     }
     
-    public class Tank : NotifiableMonoBehaviour,
+    public class TankController : NotifiableMonoBehaviour,
         ITankInputControllerHandler,
         ITank
     {
         private ITankInputController inputController;
-        private ITankModule[] tankModules;
 
+        [Header("Tank refrerences for constructor")] 
+        [SerializeField] private Transform turretPivot;
+        [SerializeField] private Transform chassisPivot;
+        
         [Header("references")]
         [SerializeField] private Rigidbody tankRigidbody;
         [SerializeField] private TankWeaponManager weaponManager;
@@ -32,8 +34,8 @@ namespace TankShooter.Battle
         [SerializeField] private Transform centerOfMass;
 
         #region ITank implementation
+        Transform ITank.Transform => transform;
         Rigidbody ITank.Rigidbody => tankRigidbody;
-        
         ITankInputController ITank.InputController => inputController;
         #endregion
 
@@ -48,10 +50,14 @@ namespace TankShooter.Battle
         protected override void SafeAwake()
         {
             base.SafeAwake();
-            
             tankRigidbody.centerOfMass = centerOfMass.localPosition;
-            tankModules = GetComponentsInChildren<ITankModule>(true);
-            foreach (var module in tankModules)
+        }
+        
+        //сюда передаем какие-нибудь настройки танка
+        public void InitTank(/* ... */)
+        {
+            var modules = GetComponentsInChildren<ITankModule>(true);
+            foreach (var module in modules)
             {
                 module.Init(this);
             }
@@ -60,10 +66,14 @@ namespace TankShooter.Battle
         public void BindInputController(ITankInputController tankInputController)
         {
             inputController = tankInputController;
-            foreach (var module in tankModules)
+
+            var inputControllerHandlers = GetComponentsInChildren<ITankInputControllerHandler>(true);
+            foreach (var handler in inputControllerHandlers)
             {
-                if (module is ITankInputControllerHandler inputControllerHandler)
-                    inputControllerHandler.BindInputController(tankInputController);
+                if (handler != this)
+                {
+                    handler.BindInputController(tankInputController);
+                }
             }
         }
     }

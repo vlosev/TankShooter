@@ -1,7 +1,9 @@
 using System;
 using Tank.Weapon;
+using TankShooter.Battle.TankCode;
 using TankShooter.Common;
 using TankShooter.Game.Weapon;
+using TankShooter.GameInput;
 using UnityEngine;
 
 namespace TankShooter.Battle
@@ -15,7 +17,7 @@ namespace TankShooter.Battle
     /// время перезарядки
     /// кол-во выстрелов без перезарядки
     /// </summary>
-    public abstract class TankWeapon : NotifiableMonoBehaviour, IReloadableWeapon, ITankInputControllerHandler
+    public abstract class TankWeaponBase : NotifiableMonoBehaviour, IReloadableWeapon, ITankInputControllerHandler
     {
         private IDisposable shootingSubscribe;
         private IDisposable reloadingSubscribe;
@@ -23,8 +25,9 @@ namespace TankShooter.Battle
         protected readonly ReactiveProperty<WeaponState> state = new ReactiveProperty<WeaponState>();
         protected readonly ReactiveProperty<float> reloadingProgress = new ReactiveProperty<float>();
 
-        protected TankWeaponManager tankWeaponManager { get; private set; }
+        protected TankWeaponManager TankWeaponManager { get; private set; }
 
+        public abstract TankWeaponSlotName SlotName { get; }
         public IReadonlyReactiveProperty<WeaponState> State => state;
         public IReadonlyReactiveProperty<float> ReloadingProgress => reloadingProgress;
         
@@ -40,7 +43,7 @@ namespace TankShooter.Battle
 
         public virtual void Init(TankWeaponManager tankWeaponManager)
         {
-            this.tankWeaponManager = tankWeaponManager;
+            this.TankWeaponManager = tankWeaponManager;
         }
 
         public virtual void BindInputController(ITankInputController inputController)
@@ -61,13 +64,13 @@ namespace TankShooter.Battle
                 shootingSubscribe = null;
             }
         }
-        
-        public virtual void OnShootingChanged(bool isShooting)
+
+        protected virtual void OnShootingChanged(bool isShooting)
         {
             throw new NotImplementedException();
-        }    
+        }
 
-        public virtual void OnReloadingHandle()
+        protected virtual void OnReloadingHandle()
         {
             throw new NotImplementedException();
         }

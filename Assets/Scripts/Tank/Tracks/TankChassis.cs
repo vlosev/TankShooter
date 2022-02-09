@@ -1,13 +1,11 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using Tank.Interfaces;
 using TankShooter.Common;
+using TankShooter.GameInput;
 using UnityEngine;
 
 namespace TankShooter.Battle.TankCode
 {
-    public class TankTracksPlatform : NotifiableMonoBehaviour,
+    public class TankChassis : NotifiableMonoBehaviour,
         IPhysicsBeforeTickListener,
         ITankModule,
         ITankInputControllerHandler
