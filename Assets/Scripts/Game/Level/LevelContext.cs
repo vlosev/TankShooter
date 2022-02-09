@@ -1,7 +1,10 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using TankShooter.Battle;
+using TankShooter.Battle.Tank;
+using TankShooter.Battle.TankCode;
+using TankShooter.Game.Enemy;
+using TankShooter.GameInput;
+using TankShooter.Tank;
+using TankShooter.Tank.Constructor;
 using UnityEngine;
 
 namespace TankShooter.Game
@@ -11,27 +14,43 @@ namespace TankShooter.Game
     /// </summary>
     public class LevelContext : MonoBehaviour
     {
+        [SerializeField] private TankConstructor tankConstructor;
         [SerializeField] private InputController inputController;
         [SerializeField] private CameraController cameraController;
-        [SerializeField] private BattleContext battleContext;
-
-        public ITankInputController PlayerInputController => inputController;
-        
-        public readonly DamageSystem sysDamage = new DamageSystem();
-        public readonly ProjectileSystem sysProjectile = new ProjectileSystem();
+        [SerializeField] private Transform playerSpawnPoint;
+        [SerializeField] private EnemyManager enemyManager;
 
         private void Start()
         {
             cameraController.BindInputController(inputController);
-            battleContext.StartBattle(this);
+            InitEnemyManager();
+            CreatePlayerTank();
         }
 
-        private void Update()
+        private void InitEnemyManager()
         {
-            var dt = Time.deltaTime;
+            enemyManager.Init(this);
+        }
+
+        private void CreatePlayerTank()
+        {
+            var playerTank = tankConstructor.CreateTank(
+                playerSpawnPoint,
+                0, //body
+                0, //chassis
+                1, //turret
+                new[]
+                {
+                    (TankWeaponSlotName.Gun, 0)
+                });
+
+            if (playerTank.TryGetComponent<TankController>(out var tank))
+            {
+                tank.BindInputController(inputController);
+                tank.InitTank(/* TODO add player settings */);
+            }
             
-            sysDamage.Update(dt);
-            sysProjectile.Update(dt);
+            cameraController.SetTarget(playerTank.transform);
         }
     }
 }

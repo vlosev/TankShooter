@@ -1,8 +1,5 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Data;
 using TankShooter.Common;
+using TankShooter.GameInput;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -11,14 +8,7 @@ namespace TankShooter.Battle
     public class CameraController : NotifiableMonoBehaviour,
         ICameraInputControllerHandler
     {
-        [FormerlySerializedAs("camera")]
         [Header("...references")]
-        [SerializeField] 
-        private Camera targetCamera;
-        [SerializeField] 
-        private float cameraSmoothSpeed;
-        [SerializeField] 
-        private Transform targetTransform;
         [SerializeField] 
         private Transform cameraHolderTransform;
 
@@ -43,6 +33,7 @@ namespace TankShooter.Battle
         [SerializeField] private float minCamAngleX = 20f;
         [SerializeField] private float maxCamAngleX = 20f;
 
+        private Transform targetTransform;
         private float zoomTargetValue;
         private float zoomValue;
         private float zoomDistance;
@@ -50,17 +41,20 @@ namespace TankShooter.Battle
         private float cameraAngleX;
         private float cameraAngleY;
 
-        private void Start()
-        {
-            ComputeCameraZoom(1);
-            ComputeCameraRotationAndTranslation(1);
-        }
-
         private void LateUpdate()
         {
             var dt = Time.smoothDeltaTime;
             ComputeCameraZoom(dt * zoomSmoothTime);
             ComputeCameraRotationAndTranslation(dt * moveSmoothTime);
+        }
+
+        public void SetTarget(Transform target)
+        {
+            targetTransform = target;
+            zoomValue = zoomDefaultValue;
+            
+            ComputeCameraZoom(1);
+            ComputeCameraRotationAndTranslation(1);
         }
 
         public void BindInputController(ICameraInputController inputController)
@@ -77,18 +71,21 @@ namespace TankShooter.Battle
         
         private void ComputeCameraRotationAndTranslation(float deltaTime)
         {
-            var cameraPosition = transform.position;
-            var targetPosition = targetTransform.position;
+            if (targetTransform != null)
+            {
+                var cameraPosition = transform.position;
+                var targetPosition = targetTransform.position;
 
-            //двигаем таргет, куда смотрит камера за танком
-            transform.position = Vector3.Lerp(cameraPosition, targetPosition, deltaTime);
-            
-            //считаем направление камеры, куда ее нужно сдвинуть относительно точки наблюдения
-            var forward = Quaternion.Euler(cameraAngleX, cameraAngleY, 0) * new Vector3(0, 0, 1);
-            
-            //двигаем камеру плавно по времени, она будет как бы бесконечно приближаться к таргет значению
-            cameraHolderTransform.localPosition = -forward * zoomDistance;
-            cameraHolderTransform.forward = forward;
+                //двигаем таргет, куда смотрит камера за танком
+                transform.position = Vector3.Lerp(cameraPosition, targetPosition, deltaTime);
+
+                //считаем направление камеры, куда ее нужно сдвинуть относительно точки наблюдения
+                var forward = Quaternion.Euler(cameraAngleX, cameraAngleY, 0) * new Vector3(0, 0, 1);
+
+                //двигаем камеру плавно по времени, она будет как бы бесконечно приближаться к таргет значению
+                cameraHolderTransform.localPosition = -forward * zoomDistance;
+                cameraHolderTransform.forward = forward;
+            }
         }
 
         private void OnCameraMoveDeltaChanged(Vector2 delta)

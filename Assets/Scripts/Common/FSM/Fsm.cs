@@ -2,11 +2,11 @@ namespace TankShooter.Common.FSM
 {
     public abstract class FsmState<TStateEntity>
     {
-        protected readonly TStateEntity Entity;
+        protected readonly TStateEntity entity;
         
         protected FsmState(TStateEntity entity)
         {
-            Entity = entity;
+            this.entity = entity;
         }
 
         public virtual void OnEnter() { }

@@ -28,7 +28,7 @@ namespace TankShooter.Common
             get => value;
             set
             {
-                if (this.value.Equals(value) != true)
+                if (Equals(this.value, value) != true)
                 {
                     this.value = value;
                     onChangedCallback?.Invoke(value);
@@ -54,6 +54,11 @@ namespace TankShooter.Common
             {
                 onChangedCallback -= onChanged;
             });
+        }
+
+        public static implicit operator T(ReactiveProperty<T> property)
+        {
+            return property.value;
         }
     }
 }
