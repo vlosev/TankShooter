@@ -5,7 +5,7 @@ using Common;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace TankShooter.Game
+namespace TankShooter.Game.Enemy
 {
     /// <summary>
     /// менеджер врагов следит за тем, нужно ли вообще спавнить, например, врагов стало меньше 10
@@ -19,13 +19,16 @@ namespace TankShooter.Game
 
         [SerializeField] private EnemySpawnPoint[] enemySpawnPoints;
 
+        private LevelContext levelContext;
         private int needToSpawnEnemiesCount;
         private float timeToSpawn = 0f;
         private readonly List<EnemyEntity> enemies = new List<EnemyEntity>();
         private readonly ObjectPool<EnemyEntity> enemiesPool = new ObjectPool<EnemyEntity>();
 
-        private void Start()
+        public void Init(LevelContext levelContext)
         {
+            this.levelContext = levelContext;
+
             //заполняем пул объектами, которые, возможно, придется создавать
             var prefabs = enemySpawnPoints.SelectMany(i => i.GetPrefabs()).Distinct();
             foreach (var prefab in prefabs)
@@ -51,35 +54,36 @@ namespace TankShooter.Game
                 }
             }
         }
-
+        
         private void SpawnEnemiesOnStart()
         {
-            var rnd = Random.Range(0, enemySpawnPoints.Length - 1);
-
-            CreateEnemy(enemySpawnPoints[rnd]);
+            for (int i = 0; i < maxEnemiesOnLevel; ++i)
+            {
+                var rnd = Random.Range(0, enemySpawnPoints.Length - 1);
+                CreateEnemy(enemySpawnPoints[rnd]);
+            }
         }
         
         private void CreateEnemy(EnemySpawnPoint spawnPoint)
         {
-            var enemyInstance = enemiesPool.InstantiateFromPool(spawnPoint.GetPrefab());
+            var spawnData = spawnPoint.GetRandomSpawnData();
 
+            var enemyInstance = enemiesPool.InstantiateFromPool(spawnData.EnemyPrefab);
             var enemyTransform = enemyInstance.transform;
             
             enemyTransform.SetParent(spawnPoint.SpawnPointTransform);
             enemyTransform.position = spawnPoint.SpawnPointTransform.position;
             enemyInstance.gameObject.SetActive(true);
 
-            if (enemyInstance.TryGetComponent<EnemyEntity>(out var entity))
-            {
-                entity.AI.StartEnemy();
-            }
+            var enemyContext = new EnemyContext(levelContext, spawnData.PathManager);
+            enemyInstance.StartEnemy(enemyContext);
         }
 
         private void OnDeadEnemy(EnemyEntity enemy)
         {
             if (enemies.Remove(enemy))
             {
-                enemy.OnDeadEnemy -= OnDeadEnemy;
+                // enemy.OnDeadEnemy -= OnDeadEnemy;
                 timeToSpawn = GetTimeToRespawn();
 
                 needToSpawnEnemiesCount++;

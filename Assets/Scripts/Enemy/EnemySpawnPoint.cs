@@ -1,35 +1,53 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using Common;
 using UnityEngine;
-using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
-namespace TankShooter.Game
+namespace TankShooter.Game.Enemy
 {
     public class EnemySpawnPoint : MonoBehaviour
     {
+        public struct SpawnData
+        {
+            public readonly EnemyEntity EnemyPrefab;
+            public readonly EnemyPathManager PathManager;
+
+            public SpawnData(EnemyEntity prefab, EnemyPathManager pathManager)
+            {
+                EnemyPrefab = prefab;
+                PathManager = pathManager;
+            }
+        }
+        
         [Serializable]
         private struct EnemySpawnDescription
         {
             [SerializeField] private EnemyEntity prefab;
             [SerializeField] private float chance;
+            [SerializeField] private EnemyPathManager[] pathManagers;
 
             public EnemyEntity Prefab => prefab;
             public float Chance => chance;
+            public EnemyPathManager[] PathManagers => pathManagers;
         }
 
+        [SerializeField] private EnemyPathManager defaultPathManager;
         [SerializeField] private EnemySpawnDescription[] spawnPrefabs;
 
         public Transform SpawnPointTransform => transform;
 
-        public EnemyEntity GetPrefab()
+        public SpawnData GetRandomSpawnData()
         {
             //TODO: compute drop with probability
-            //var rnd = Random.Range(0f, 1f);
-            //for (int i = 0; i < )
+            var spawnDescription = spawnPrefabs[0];
+            var pathManager = defaultPathManager;
+            var pathManagers = spawnDescription.PathManagers;
+            if (pathManagers != null && pathManagers.Length != 0)
+            {
+                pathManager = pathManagers[Random.Range(0, pathManagers.Length)];
+            }
 
-            return spawnPrefabs[0].Prefab;
+            return new SpawnData(spawnDescription.Prefab, pathManager);
         }
 
         //массив префабов отсюда нужен только для формирования пула вначале, далее мы из точки будем получать только префаб
