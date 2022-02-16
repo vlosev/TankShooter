@@ -16,6 +16,7 @@ namespace TankShooter.Tank.Weapon.Gun
     public class GunProjectile : Projectile<TankWeaponGun, GunProjectileContext>
     {
         [SerializeField] private float lifeTime = 3f;
+        [SerializeField] private float speed = 100f;
         
         private float lostTime;
 
@@ -28,6 +29,8 @@ namespace TankShooter.Tank.Weapon.Gun
 
         public override void UpdateVisual(float dt)
         {
+            transform.Translate(transform.forward * speed * dt, Space.World);
+            
             if (lostTime <= 0f)
             {
                 gameObject.SetActive(false);
