@@ -1,11 +1,15 @@
 using TankShooter.Common;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace TankShooter.GameInput
 {
     public class TankInputControllerKeyboardAndMouse : InputController
     {
         [SerializeField] private Camera playerCamera;
+        [SerializeField] private float maxDistancePhysicsRaycast = 100f;
+        [SerializeField] private float maxDistanceRaycastToPlane = 20f;
+        [SerializeField] private LayerMask layerMaskForTarget;
 
         private Camera PlayerCamera
         {
@@ -103,10 +107,22 @@ namespace TankShooter.GameInput
         {
             var mousePos = Input.mousePosition;
             var cam = PlayerCamera;
+            
             if (cam != null)
             {
-                mousePos.z = cam.farClipPlane;
-                return cam.ScreenToWorldPoint(mousePos); 
+                var ray = cam.ScreenPointToRay(mousePos);
+                if (Physics.Raycast(ray, out var hit, maxDistancePhysicsRaycast, layerMaskForTarget))
+                {
+                    Debug.DrawLine(cam.transform.position, hit.point, Color.red, 0, false);
+                    return hit.point;
+                }
+
+                var plane = new Plane(-Vector3.forward, cam.transform.position + Vector3.forward * maxDistanceRaycastToPlane);
+                if (plane.Raycast(ray, out var enter))
+                {
+                    Debug.DrawLine(cam.transform.position, hit.point, Color.red, 0, false);
+                    return ray.GetPoint(enter);
+                }
             }
 
             return default;
