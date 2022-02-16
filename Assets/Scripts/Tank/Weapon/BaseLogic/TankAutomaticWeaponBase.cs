@@ -1,17 +1,14 @@
 using UnityEngine;
 
-namespace TankShooter.Battle
+namespace TankShooter.Tank.Weapon
 {
     public abstract class TankAutomaticWeaponBase : TankWeaponBase
     {
-        protected bool doShot = false;
+        protected bool isShooting = false;
 
         protected override void OnShootingChanged(bool isShooting)
         {
-            if (isShooting)
-            {
-                Debug.Log($"Do automation weapon '{GetType().Name}' shot!");
-            }
+            this.isShooting = isShooting;
         }
     }
 }

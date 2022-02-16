@@ -1,10 +1,7 @@
-using Tank.Interfaces;
-using Tank.Weapon;
 using TankShooter.Common;
-using TankShooter.GameInput;
 using UnityEngine;
 
-namespace TankShooter.Battle.TankCode
+namespace TankShooter.Tank.Weapon
 {
     public enum TankWeaponSlotName
     {
@@ -24,20 +21,25 @@ namespace TankShooter.Battle.TankCode
         HomingMissile = 2
     }
 
-    public class TankWeaponSlot : NotifiableMonoBehaviour, ITankInputControllerHandler
+    public class TankWeaponSlot : NotifiableMonoBehaviour
     {
         [SerializeField] private TankWeaponSlotName slotName;
+        [SerializeField] private Transform slotOverrideParentTransform;
 
         private ITank tank;
+        private TankWeaponBase slotWeapon;
 
         private TankWeaponManager tankWeaponManager;
-        private readonly ReactiveProperty<TankWeaponBase> weapon = new ReactiveProperty<TankWeaponBase>();
-        private readonly ReactiveProperty<bool> isActiveSlot = new ReactiveProperty<bool>();
-        private readonly ReactiveProperty<bool> isSelectedSlot = new ReactiveProperty<bool>();
-
-        public IReadonlyReactiveProperty<bool> IsActiveSlot => isActiveSlot;
-        public IReadonlyReactiveProperty<bool> IsSelectedSlot => isSelectedSlot;
-        public IReadonlyReactiveProperty<TankWeaponBase> Weapon => weapon;
+        
+        public Transform WeaponParentTransform
+        {
+            get
+            {
+                if (slotOverrideParentTransform != null)
+                    return slotOverrideParentTransform;
+                return transform;
+            }
+        }
 
         /// <summary>
         /// имя слота, оно нужно, чтобы идентифицировать слот при установке оружия,
@@ -45,37 +47,51 @@ namespace TankShooter.Battle.TankCode
         /// </summary>
         public TankWeaponSlotName SlotName => slotName;
 
+        public TankWeaponBase Weapon => slotWeapon;
+
         public void Init(TankWeaponManager tankWeaponManager)
         {
             this.tankWeaponManager = tankWeaponManager;
+
+            if (slotWeapon != null)
+            {
+                slotWeapon.Init(tankWeaponManager, this);
+            }
         }
 
         public void SetWeapon(TankWeaponBase weapon)
         {
-            if (this.weapon.Value == weapon)
-                return;
+            if (slotWeapon != weapon)
+            {
+                if (slotWeapon != null)
+                {
+                    OnDetachWeapon(slotWeapon);
+                    slotWeapon = null;
+                }
 
-            if (this.weapon.Value != null)
-                OnDetachWeapon(this.weapon);
-            
-            this.weapon.Value = weapon;
-            if (this.weapon.Value != null)
-                OnAttachWeapon(this.weapon);
-        }
-
-        public void SetSelection(bool select)
-        {
-            isSelectedSlot.Value = select;
-        }
-
-        public void BindInputController(ITankInputController inputController)
-        {
-            // if (tankWeaponBase != null)
-            //     tankWeaponBase.BindInputController(inputController);
+                slotWeapon = weapon;
+                if (slotWeapon != null)
+                {
+                    OnAttachWeapon(slotWeapon);
+                }
+            }
         }
 
         protected virtual void OnAttachWeapon(TankWeaponBase weaponBase)
         {
+            var parent = transform;
+            if (slotOverrideParentTransform != null)
+            {
+                parent = slotOverrideParentTransform;
+            }
+
+            var weaponTransform = weaponBase.transform;
+            if (weaponTransform != null)
+            {
+                weaponTransform.SetParent(parent);
+                weaponTransform.localPosition = Vector3.zero;
+                weaponTransform.localRotation = Quaternion.identity;
+            }
         }
 
         protected virtual void OnDetachWeapon(TankWeaponBase weaponBase)

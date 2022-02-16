@@ -1,12 +1,10 @@
 using System;
-using Tank.Weapon;
-using TankShooter.Battle.TankCode;
 using TankShooter.Common;
 using TankShooter.Game.Weapon;
 using TankShooter.GameInput;
 using UnityEngine;
 
-namespace TankShooter.Battle
+namespace TankShooter.Tank.Weapon
 {
     /// <summary>
     /// type:
@@ -17,33 +15,27 @@ namespace TankShooter.Battle
     /// время перезарядки
     /// кол-во выстрелов без перезарядки
     /// </summary>
-    public abstract class TankWeaponBase : NotifiableMonoBehaviour, IReloadableWeapon, ITankInputControllerHandler
+    public abstract class TankWeaponBase : NotifiableMonoBehaviour, IReloadableWeapon
     {
         private IDisposable shootingSubscribe;
         private IDisposable reloadingSubscribe;
 
+        protected ProjectileManager ProjectileManager { get; private set; }
         protected readonly ReactiveProperty<WeaponState> state = new ReactiveProperty<WeaponState>();
         protected readonly ReactiveProperty<float> reloadingProgress = new ReactiveProperty<float>();
 
-        protected TankWeaponManager TankWeaponManager { get; private set; }
+        protected TankWeaponManager WeaponManager { get; private set; }
+        protected TankWeaponSlot WeaponSlot { get; private set; }
 
         public abstract TankWeaponSlotName SlotName { get; }
         public IReadonlyReactiveProperty<WeaponState> State => state;
         public IReadonlyReactiveProperty<float> ReloadingProgress => reloadingProgress;
         
-        protected override void SafeAwake()
+        public virtual void Init(TankWeaponManager weaponManager, TankWeaponSlot weaponSlot)
         {
-            base.SafeAwake();
-            
-            state.SubscribeChanged(state =>
-            {
-                Debug.Log($"Weapon '{GetType().Name}' change state to: '{state}'");
-            }).SubscribeToDispose(this);
-        }
-
-        public virtual void Init(TankWeaponManager tankWeaponManager)
-        {
-            this.TankWeaponManager = tankWeaponManager;
+            this.WeaponManager = weaponManager;
+            this.WeaponSlot = weaponSlot;
+            this.ProjectileManager = weaponManager.Ctx.ProjectileManager;
         }
 
         public virtual void BindInputController(ITankInputController inputController)
@@ -54,6 +46,8 @@ namespace TankShooter.Battle
                 
                 inputController.DoReloadingWeaponEvent += OnReloadingHandle;
                 reloadingSubscribe = new ActionDisposable(() => inputController.DoReloadingWeaponEvent -= OnReloadingHandle);
+                
+                Debug.Log($"Weapon '{GetType().Name}' bind input controller");
             }
             else
             {
@@ -62,17 +56,17 @@ namespace TankShooter.Battle
                 
                 shootingSubscribe?.Dispose();
                 shootingSubscribe = null;
+                
+                Debug.Log($"Weapon '{GetType().Name}' unbind input controller");
             }
         }
 
         protected virtual void OnShootingChanged(bool isShooting)
         {
-            throw new NotImplementedException();
         }
 
         protected virtual void OnReloadingHandle()
         {
-            throw new NotImplementedException();
         }
     }
 }

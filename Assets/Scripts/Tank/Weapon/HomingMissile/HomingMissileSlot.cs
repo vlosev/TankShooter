@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace TankShooter.Battle.TankCode
+namespace TankShooter.Tank.Weapon.HommingMissile
 {
     public class HomingMissileSlot : MonoBehaviour
     {
