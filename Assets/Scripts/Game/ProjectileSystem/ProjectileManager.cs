@@ -25,15 +25,10 @@ namespace TankShooter.Game.Weapon
         }
 
         [SerializeField] private ProjectileSettings[] projectileSettings;
-
-        //пуль пуль/снарядов/ракет
-        private readonly ObjectPool<Projectile> projectliesPool = new ObjectPool<Projectile>();
         
-        //активные пули, которые в данный момент летят к своей цели
-        private readonly List<Projectile> activeProjectiles = new List<Projectile>();
-        
-        //пули, которые в конце кадра нужно будет удалить
-        private readonly List<Projectile> removeProjectiles = new List<Projectile>();
+        private readonly ObjectPool<Projectile> projectilesPool = new ObjectPool<Projectile>(); //пуль пуль/снарядов/ракет
+        private readonly List<Projectile> activeProjectiles = new List<Projectile>(); //активные пули, которые в данный момент летят к своей цели
+        private readonly List<Projectile> removeProjectiles = new List<Projectile>(); //пули, которые в конце кадра нужно будет удалить
 
         protected override void SafeAwake()
         {
@@ -42,7 +37,7 @@ namespace TankShooter.Game.Weapon
             foreach (var ps in projectileSettings)
             {
                 var container = ps.PoolContainer != null ? ps.PoolContainer : transform;
-                projectliesPool.RegisterObject(container, ps.Prefab, ps.PrefabsCount);
+                projectilesPool.RegisterObject(container, ps.Prefab, ps.PrefabsCount);
             }
         }
 
@@ -52,9 +47,7 @@ namespace TankShooter.Game.Weapon
             //сначала обновляем все снаряды
             var dt = Time.deltaTime;
             for (int i = 0; i < activeProjectiles.Count; ++i)
-            {
                 activeProjectiles[i].UpdateVisual(dt);
-            }
         }
 
         //здесь апдейт сделан таким образом, чтобы можно было управлять скоростью и движением пуль
@@ -64,27 +57,23 @@ namespace TankShooter.Game.Weapon
         void IPhysicsBeforeTickListener.OnBeforePhysicsTick(float dt)
         {
             for (int i = 0; i < activeProjectiles.Count; ++i)
-            {
                 activeProjectiles[i].UpdatePhysics(dt);
-            }
         }
 
         //в конце кадра проходим по тем, кого по разным причинам нужно уничтожить и собрать в кучу
         private void LateUpdate()
         {
-            if (removeProjectiles.Count > 0)
+            if (removeProjectiles.Count == 0)
+                return;
+
+            for (int i = 0; i < removeProjectiles.Count; ++i)
             {
-                for (int i = 0; i < removeProjectiles.Count; ++i)
-                {
-                    var projectile = removeProjectiles[i];
-                    if (activeProjectiles.Remove(projectile))
-                    {
-                        projectliesPool.Release(projectile);
-                    }
-                }
-                
-                removeProjectiles.Clear();
+                var projectile = removeProjectiles[i];
+                if (activeProjectiles.Remove(projectile))
+                    projectilesPool.Release(projectile);
             }
+            
+            removeProjectiles.Clear();
         }
 
         public Projectile GetProjectile(Projectile projectilePrefab)
@@ -92,20 +81,17 @@ namespace TankShooter.Game.Weapon
             if (projectilePrefab == null)
                 throw new Exception("Can't instantiate null projectile prefab!");
 
-            var projectile = projectliesPool.InstantiateFromPool(projectilePrefab);
+            var projectile = projectilesPool.InstantiateFromPool(projectilePrefab);
             projectile.gameObject.SetActive(true);
             
             activeProjectiles.Add(projectile);
-            
             return projectile;
         }
 
         public void ReleaseProjectile(Projectile projectile)
         {
             if (removeProjectiles.Contains(projectile) != true)
-            {
                 removeProjectiles.Add(projectile);
-            }
         }
     }
 }
