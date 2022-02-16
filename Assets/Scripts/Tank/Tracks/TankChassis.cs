@@ -1,15 +1,25 @@
-using Tank.Interfaces;
+using System;
+using System.Linq;
+using Common.PhysicsUtils;
 using TankShooter.Common;
+using TankShooter.Common.FSM;
 using TankShooter.GameInput;
 using UnityEngine;
+using UnityEngine.Serialization;
 
-namespace TankShooter.Battle.TankCode
+namespace TankShooter.Tank
 {
-    public class TankChassis : NotifiableMonoBehaviour,
+    public partial class TankChassis : NotifiableMonoBehaviour,
         IPhysicsBeforeTickListener,
         ITankModule,
         ITankInputControllerHandler
     {
+        #region inspector
+        [Header("...move settings")]
+        [SerializeField] private float maxSpeedKmh = 60f;
+        [SerializeField] private AnimationCurve torqueCurve;
+        [SerializeField] private float brakeCoeffOfSpeedLimit = 0.1f;
+
         [Header("...physics settings")] 
         [SerializeField] private float minBrakeTorque = 100f;
         [SerializeField] private float maxBrakeTorque = 1500f;
@@ -18,134 +28,102 @@ namespace TankShooter.Battle.TankCode
         [SerializeField] private float reverseMaxTorque = 300f;
         [SerializeField] private float rotateOnStandMotorTorque = 500f;
         [SerializeField] private float rotateOnStandBrakeTorque = 50f;
-        [SerializeField] private float minStifnessOfStay = 0.1f;
-        [SerializeField] private float minStifnessOfMove = 0.1f;
+        [SerializeField] private float rotateOnMoveBrakeTorque = 50f;
+        [SerializeField] private float centerOfMassHeight = -2f;
+
+        [Header("Настройки трения при развороте на месте")]
+        [SerializeField] private float minForwardStiffnessOfStay = 0.8f;
+        [SerializeField] private float maxForwardStiffnessOfStay = 1f;
+        [SerializeField] private float minSidewayStiffnessOfStay = 0.1f;
+        [SerializeField] private float maxSidewayStiffnessOfStay = 0.1f;
         
+        [Header("Настройки трения при движении")]
+        [SerializeField] private float minForwardStiffnessOfMove = 0.1f;
+        [SerializeField] private float maxForwardStiffnessOfMove = 0.3f;
+        [SerializeField] private float minSidewayStiffnessOfMove = 0.1f;
+        [SerializeField] private float maxSidewayStiffnessOfMove = 0.1f;
+
+        [SerializeField] private float minSpeedForMove = 1f;
+        #endregion
+
         [SerializeField] private TankTrack LTrack;
         [SerializeField] private TankTrack RTrack;
 
-        //reference to parent
-        private ITank tank;
-        private ITankInputController tankInputController;
         private Rigidbody rigidbody;
-        
+        private event Action<float> OnPhysicsTickEvent;
+
+        private Fsm<TankChassis> fsm;
+        private WheelCollider[] leftWheelColliders;
+        private WheelCollider[] rightWheelColliders;
+
+        private float speed;
         private float acceleration;
         private float steering;
 
         protected override void SafeAwake()
         {
             base.SafeAwake();
-            
             BattleTimeMachine.SubscribePhysicsBeforeTick(this).SubscribeToDispose(this);
         }
         
         public void Init(ITank tank)
         {
-            this.tank = tank;
             this.rigidbody = tank.Rigidbody;
+
+            leftWheelColliders = LTrack.WheelsData.Select(i => i.WheelCollider).ToArray(); 
+            rightWheelColliders = RTrack.WheelsData.Select(i => i.WheelCollider).ToArray(); 
+            fsm = new Fsm<TankChassis>(new StateStop(this));
+
+            ComputeCenterOfMass();
         }
 
         public void BindInputController(ITankInputController tankInputController)
         {
-            this.tankInputController = tankInputController;
-            tankInputController.Acceleration.SubscribeChanged(value => acceleration = value, true).SubscribeToDispose(this);
-            tankInputController.Steering.SubscribeChanged(value => steering = value, true).SubscribeToDispose(this);
-        }
-
-        public void OnBeforePhysicsTick(float dt)
-        {
-            var isAccel = !Mathf.Approximately(acceleration, 0f);
-            var isSteer = !Mathf.Approximately(steering, 0f);
-
-            if (isAccel && isSteer)
+            tankInputController.Acceleration.SubscribeChanged(value =>
             {
-                AcceleratingAndSteering();
-            }
-            else if (isAccel)
+                acceleration = value;
+                fsm?.Update();
+            }, true).SubscribeToDispose(this);
+
+            tankInputController.Steering.SubscribeChanged(value =>
             {
-                Accelerating();
-            }
-            else if (isSteer)
-            {
-                SteeringOnStand();
-            }
-            else
-            {
-                StopTrackWheels();
-            }
+                steering = value;
+                fsm?.Update();
+            }, true).SubscribeToDispose(this);
         }
 
-        private void StopTrackWheels()
+        void IPhysicsBeforeTickListener.OnBeforePhysicsTick(float dt)
         {
-            LTrack.SetTorques(maxBrakeTorque, 0f, minStifnessOfStay);
-            RTrack.SetTorques(maxBrakeTorque, 0f, minStifnessOfStay);
+            //compute stuff
+            speed = PhysicsUtils.ConvertSpeedMStoKMH(rigidbody.velocity.magnitude);
+            OnPhysicsTickEvent?.Invoke(dt);
         }
 
-        private void Accelerating()
+        private void ComputeCenterOfMass()
         {
-            var motorTorque = ComputeMotorTorque();
-            var stiffnes = ComputeSidewayStiffnes(false);
-            
-            LTrack.SetTorques(minBrakeTorque, motorTorque, stiffnes);
-            RTrack.SetTorques(minBrakeTorque, motorTorque, stiffnes);
-        }
+            var centerOfMass = new GameObject("CENTER_OF_MASS");
+            centerOfMass.transform.SetParent(transform);
 
-        private void AcceleratingAndSteering()
-        {
-            var motorTorque = ComputeMotorTorque();
-            var stiffnes = ComputeSidewayStiffnes(false);
-
-            var lTorque = motorTorque * rotateTorqueMultiplyOnMove * steering;
-            var rTorque = motorTorque * rotateTorqueMultiplyOnMove * -steering;
-            
-            LTrack.SetTorques(minBrakeTorque, lTorque, stiffnes);
-            RTrack.SetTorques(minBrakeTorque, rTorque, stiffnes);
-            
-            // Debug.Log($"track accelerating and steering, motorTorque = {motorTorque}, steer = {steering}");
-        }
-
-        private void SteeringOnStand()
-        {
-            var lTorque = steering * rotateOnStandMotorTorque;
-            var rTorque = -steering * rotateOnStandMotorTorque;
-            var stiffnes = ComputeSidewayStiffnes(true);
-            
-            LTrack.SetTorques(rotateOnStandBrakeTorque, lTorque, stiffnes);
-            RTrack.SetTorques(rotateOnStandBrakeTorque, rTorque, stiffnes);
-
-            // Debug.Log($"STEERING ON STAND: brake: {rotateOnStandBrakeTorque}, lTorque: {lTorque}, rTorque: {rTorque}");
-        }
-
-        //получаем крутящий момент для разных направлений
-        private float ComputeMotorTorque()
-        {
-            return acceleration > 0f
-                ? forwardMaxTorque * acceleration
-                : reverseMaxTorque * acceleration;
-        }
-
-        private float ComputeSidewayStiffnes(bool isStay)
-        {
-            return 1.0f + (isStay ? minStifnessOfStay : minStifnessOfMove) - Mathf.Abs(steering);
-        }
-        
-        //вычисляем среднюю скорость колес
-        private float GetAverageRPM()
-        {
             var wheelsCount = 0;
-            var sumRpm = 0f;
+            var centerOfMassPosition = Vector3.zero;
+            foreach (var wd in LTrack.WheelsData)
+            {
+                centerOfMassPosition += wd.WheelCollider.transform.localPosition;
+                wheelsCount++;
+            }
 
-            int trackWheelsCount;
-            float trackSumRpm;
-            LTrack.GetRpmAndWheelsCount(out trackWheelsCount, out trackSumRpm);
-            wheelsCount += trackWheelsCount;
-            sumRpm += trackSumRpm;
+            foreach (var wd in LTrack.WheelsData)
+            {
+                centerOfMassPosition += wd.WheelCollider.transform.localPosition;
+                wheelsCount++;
+            }
 
-            RTrack.GetRpmAndWheelsCount(out trackWheelsCount, out trackSumRpm);
-            wheelsCount += trackWheelsCount;
-            sumRpm += trackSumRpm;
-
-            return wheelsCount != 0 ? sumRpm / wheelsCount : 0f;
+            centerOfMassPosition.y = 0f;
+            centerOfMassPosition = (centerOfMassPosition / wheelsCount);
+            centerOfMassPosition.y = centerOfMassHeight;
+            
+            centerOfMass.transform.localPosition = centerOfMassPosition;
+            rigidbody.centerOfMass = centerOfMassPosition;
         }
     }
 }

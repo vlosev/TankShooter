@@ -12,6 +12,8 @@ namespace TankShooter.Battle.TankCode
         [SerializeField] private bool isDriveWheel;
         [SerializeField] private bool isSlothWheel;
 
+        public float rotationAngle = 0f;
+
         public WheelCollider WheelCollider => wheelCollider;
         public Transform WheelTransform => wheelTranform;
         public bool IsDriveWheel => isDriveWheel;
