@@ -1,6 +1,7 @@
 using System;
 using TankShooter.Battle;
 using TankShooter.Battle.TankCode;
+using TankShooter.Tank.Weapon;
 using UnityEngine;
 
 namespace TankShooter.Tank.Constructor

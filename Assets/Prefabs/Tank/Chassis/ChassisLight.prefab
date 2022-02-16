@@ -45,15 +45,68 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66fee451d5fcd48c6aa9e3e2c645d263, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxSpeedKmh: 35
+  torqueCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0.0041656494
+      value: 0.759194
+      inSlope: 1.1433436
+      outSlope: 1.1433436
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.18512446
+      value: 0.9660921
+      inSlope: 0.44668114
+      outSlope: 0.44668114
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.37335965
+    - serializedVersion: 3
+      time: 0.5842821
+      value: 0.91921014
+      inSlope: -0.13475871
+      outSlope: -2.2111392
+      tangentMode: 65
+      weightedMode: 0
+      inWeight: 0.25768217
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: -3.3760982
+      outSlope: -31.660624
+      tangentMode: 1
+      weightedMode: 0
+      inWeight: 0.40572086
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  brakeCoeffOfSpeedLimit: 1
   minBrakeTorque: 0
   maxBrakeTorque: 1500
-  forwardMaxTorque: 1000
-  rotateTorqueMultiplyOnMove: 0.4
-  reverseMaxTorque: 300
-  rotateOnStandMotorTorque: 500
+  forwardMaxTorque: 1700
+  rotateTorqueMultiplyOnMove: 0.9
+  reverseMaxTorque: 800
+  rotateOnStandMotorTorque: 1000
   rotateOnStandBrakeTorque: 0
-  minStifnessOfStay: 0.1
-  minStifnessOfMove: 0.1
+  rotateOnMoveBrakeTorque: 500
+  centerOfMassHeight: -1
+  minForwardStiffnessOfStay: 0.05
+  maxForwardStiffnessOfStay: 0.2
+  minSidewayStiffnessOfStay: 0.2
+  maxSidewayStiffnessOfStay: 0.02
+  minForwardStiffnessOfMove: 0.3
+  maxForwardStiffnessOfMove: 0.5
+  minSidewayStiffnessOfMove: 0.5
+  maxSidewayStiffnessOfMove: 0.75
+  minSpeedForMove: 1
   LTrack: {fileID: 7636640288600639917}
   RTrack: {fileID: 591468183452417844}
 --- !u!1001 &3933448174187494581
@@ -109,11 +162,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1616416321845068126, guid: b4729aa3ce8d749a2ab15464d859bf9a, type: 3}
       propertyPath: m_Name
-      value: LazyWheel
+      value: SlothWheel
+      objectReference: {fileID: 0}
+    - target: {fileID: 1727849883228150972, guid: b4729aa3ce8d749a2ab15464d859bf9a, type: 3}
+      propertyPath: m_Name
+      value: DriveWheel
       objectReference: {fileID: 0}
     - target: {fileID: 2912801604001326477, guid: b4729aa3ce8d749a2ab15464d859bf9a, type: 3}
       propertyPath: m_Name
       value: MainWheel
+      objectReference: {fileID: 0}
+    - target: {fileID: 7131774556295424080, guid: b4729aa3ce8d749a2ab15464d859bf9a, type: 3}
+      propertyPath: m_Name
+      value: SlothWheel
       objectReference: {fileID: 0}
     - target: {fileID: 7353185257748737364, guid: b4729aa3ce8d749a2ab15464d859bf9a, type: 3}
       propertyPath: m_Name

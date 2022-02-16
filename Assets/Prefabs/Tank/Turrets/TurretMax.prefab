@@ -95,6 +95,36 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &6067380134163085734
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7995601709646652570}
+  m_Layer: 0
+  m_Name: GunAttachPivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7995601709646652570
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6067380134163085734}
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 6189968539384284501}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!1 &6671998854265688151
 GameObject:
   m_ObjectHideFlags: 0
@@ -145,9 +175,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd67ca603d05d478aae71988bf57534f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rotationTurrentSpeed: 20
-  minGunAngle: -20
-  maxGunAngle: 20
+  rotationTurrentSpeed: 12
+  minGunAngle: -25
+  maxGunAngle: 7
   turnGunSpeed: 10
   gunPivot: {fileID: 6189968539384284501}
 --- !u!114 &3639528447619871844
@@ -163,6 +193,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   slotName: 2
+  slotOverrideParentTransform: {fileID: 0}
   missilePivots:
   - {fileID: 3276900988875316589}
   - {fileID: 7622936647495610685}
@@ -192,13 +223,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8256870099778397102}
-  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0.48099995, z: 0.996}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
+  m_Children:
+  - {fileID: 7995601709646652570}
   m_Father: {fileID: 6117340391786350814}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &4319108178446817673
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -212,6 +244,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   slotName: 0
+  slotOverrideParentTransform: {fileID: 7995601709646652570}
 --- !u!1001 &789477522352209498
 PrefabInstance:
   m_ObjectHideFlags: 0

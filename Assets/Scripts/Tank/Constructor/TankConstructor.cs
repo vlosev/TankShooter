@@ -1,10 +1,7 @@
 using System;
 using System.Linq;
 using Common;
-using Tank.Interfaces;
-using TankShooter.Battle;
-using TankShooter.Battle.Tank;
-using TankShooter.Battle.TankCode;
+using TankShooter.Tank.Weapon;
 using UnityEngine;
 
 namespace TankShooter.Tank.Constructor
@@ -36,7 +33,7 @@ namespace TankShooter.Tank.Constructor
                     Instantiate(turretPrefab, constructor.TurretPivot);
                 }
                 
-                //check weapon slots
+                //устанавливаем оружие в слоты танка
                 if (body.TryGetComponentsInChildren<TankWeaponSlot>(out var slots))
                 {
                     foreach (var weaponItem in weapons)
@@ -45,10 +42,7 @@ namespace TankShooter.Tank.Constructor
                         var weaponPrefab = constructorData.GetWeaponPrefab(weaponItem.slot, weaponItem.index);
                         if (slot != null && weaponPrefab != null)
                         {
-                            var instance = Instantiate(weaponPrefab, slot.transform, false);
-                            instance.transform.localPosition = Vector3.zero;
-                            instance.transform.localRotation = Quaternion.identity;
-                            
+                            var instance = Instantiate(weaponPrefab, slot.WeaponParentTransform, false);
                             slot.SetWeapon(instance);
                         }
                     }

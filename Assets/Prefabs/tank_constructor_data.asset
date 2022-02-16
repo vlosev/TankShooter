@@ -28,7 +28,7 @@ MonoBehaviour:
     - {fileID: 1254054912772197532, guid: e7a95013a2fd24a808a033058c9f4f57, type: 3}
   - slotName: 1
     weapons:
-    - {fileID: 1996674146903504079, guid: b0ac0002a41894b2393aedc8b4d10a11, type: 3}
+    - {fileID: 7029980101581545940, guid: f70fd1dc12887499997fa512021bffa8, type: 3}
   - slotName: 2
     weapons:
     - {fileID: 1996674146903504079, guid: b0ac0002a41894b2393aedc8b4d10a11, type: 3}
