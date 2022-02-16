@@ -1,15 +1,15 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using Common;
-using Tank.Interfaces;
+using Common.MathUtils;
 using TankShooter.Common;
 using TankShooter.GameInput;
+using TankShooter.Tank.Weapon;
 using UnityEngine;
 
-namespace TankShooter.Battle.TankCode
+namespace TankShooter.Tank
 {
+    public class TankTurretControllerContext
+    {
+    }
+    
     public class TankTurretController :
         NotifiableMonoBehaviour,
         ITankModule,
@@ -24,11 +24,12 @@ namespace TankShooter.Battle.TankCode
         [Tooltip("скорость наклона/поднятия пушки градусов/сек")] 
         [SerializeField] private float turnGunSpeed = 10f;
         [SerializeField] private Transform gunPivot;
-
+        
         private TankWeaponSlot gunSlot;
         private Transform selfTransform;
+        private Transform tankTransform;
+
         private Vector3 targetWorldPoint;
-        
         private Quaternion turretTargetRotation;
         private Quaternion gunTargetRotation;
 
@@ -43,6 +44,7 @@ namespace TankShooter.Battle.TankCode
         
         public void Init(ITank tank)
         {
+            tankTransform = tank.Transform;
             selfTransform = transform;
         }
 
@@ -59,7 +61,7 @@ namespace TankShooter.Battle.TankCode
             targetWorldPoint.y = currentPosition.y; //башню поворачиваем в плоскости XoZ
             
             var targetDirection = (targetWorldPoint - currentPosition).normalized;
-            var localDirection = transform.InverseTransformDirection(targetDirection);
+            var localDirection = tankTransform.InverseTransformDirection(targetDirection);
             if (localDirection.sqrMagnitude > 0f)
             {
                 turretTargetRotation.SetLookRotation(localDirection, selfTransform.up);
@@ -67,46 +69,45 @@ namespace TankShooter.Battle.TankCode
                 currentRotation.eulerAngles = new Vector3(0, currentRotation.eulerAngles.y, 0); //убираем накапливаемую ошибку
                 selfTransform.localRotation = currentRotation;
 
-#if UNITY_EDITOR
                 Debug.DrawLine(currentPosition, currentPosition + selfTransform.forward * 10f, Color.yellow, 0, false);
                 Debug.DrawLine(currentPosition, currentPosition + targetDirection * 10f, Color.green, 0, false);
-#endif
             }
         }
 
         private void UpdateGunDirection(Vector3 targetWorldPoint, float dt)
         {
-            var currentPosition = gunPivot.position;
-            
+            var sourcePos = gunPivot.position;
+            var turretDir = selfTransform.forward;
+
             //1) получаем вектор от точки в мире до точки, куда сейчас смотрит оружие и дистанцию до этой точки
-            var fromGunPositionToTargetPoint = targetWorldPoint - currentPosition;
+            var fromGunPositionToTargetPoint = targetWorldPoint - sourcePos;
             var fromGunPositionToTargetPointDistance = fromGunPositionToTargetPoint.magnitude;
             
             //2) теперь отодвигаемся от позиции пивота оружия по вектору forward в том же направлении и задаем высоту точки прицеливания
-            var gunTargetPoint = gunPivot.position + gunPivot.forward * fromGunPositionToTargetPointDistance;
-            gunTargetPoint.y = targetWorldPoint.y;
+            var targetPos = sourcePos + turretDir * fromGunPositionToTargetPointDistance;
+            targetPos.y = targetWorldPoint.y;
             
             //находим точку, куда относительно башни должно быть направлено оружие и вращаем туда
             var currentRotation = gunPivot.localRotation;
-            var targetDirection = (gunTargetPoint - currentPosition).normalized;
+            var targetDirection = (targetPos - sourcePos).normalized;
             var localDirection = selfTransform.InverseTransformDirection(targetDirection);
             if (localDirection.sqrMagnitude > 0f)
             {
                 gunTargetRotation.SetLookRotation(localDirection, selfTransform.up);
-
-                var targetQuat = Quaternion.RotateTowards(currentRotation, gunTargetRotation, dt * turnGunSpeed);
-                targetQuat.Normalize();
-
-                //клампим кватернион, чтобы нельзя было слишком сильно поднять и опустить пушку
-                var eulerAngles = targetQuat.eulerAngles;
-                //Debug.Log($"ea: {eulerAngles}");
-                //eulerAngles.x = Mathf.Clamp(eulerAngles.x, Mathf.Repeat(minGunAngle, 360), Mathf.Repeat(maxGunAngle, 360));
-                targetQuat.eulerAngles = eulerAngles;
-                
-                gunPivot.localRotation = targetQuat;
-
-                Debug.DrawLine(gunPivot.position, gunTargetPoint, Color.red, 0, false);
             }
+
+            var targetQuat = Quaternion.RotateTowards(currentRotation, gunTargetRotation, dt * turnGunSpeed);
+            targetQuat.Normalize();
+            var eulerAngles = targetQuat.eulerAngles;
+            eulerAngles.x = MathUtils.ClampAngle(eulerAngles.x, minGunAngle, maxGunAngle);
+            eulerAngles.z = 0f;
+            eulerAngles.y = 0f;
+            targetQuat.eulerAngles = eulerAngles;
+            gunPivot.localRotation = targetQuat;
+
+            Debug.DrawLine(sourcePos, sourcePos + currentRotation * turretDir * 10f, Color.magenta, 0, false);
+            Debug.DrawLine(sourcePos, sourcePos + targetDirection * 5f, Color.yellow, 0, false);
+            Debug.DrawLine(sourcePos, sourcePos + turretDir * 5f, Color.green, 0, false);
         }
     }
 }

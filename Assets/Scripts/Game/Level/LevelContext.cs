@@ -1,10 +1,12 @@
+using Common;
 using TankShooter.Battle;
-using TankShooter.Battle.Tank;
-using TankShooter.Battle.TankCode;
 using TankShooter.Game.Enemy;
+using TankShooter.Game.HUD;
+using TankShooter.Game.Weapon;
 using TankShooter.GameInput;
 using TankShooter.Tank;
 using TankShooter.Tank.Constructor;
+using TankShooter.Tank.Weapon;
 using UnityEngine;
 
 namespace TankShooter.Game
@@ -19,7 +21,10 @@ namespace TankShooter.Game
         [SerializeField] private CameraController cameraController;
         [SerializeField] private Transform playerSpawnPoint;
         [SerializeField] private EnemyManager enemyManager;
-
+        [SerializeField] private ProjectileManager projectileManager;
+        
+        [SerializeField] private TankUI tankUI;
+        
         private void Start()
         {
             cameraController.BindInputController(inputController);
@@ -34,6 +39,9 @@ namespace TankShooter.Game
 
         private void CreatePlayerTank()
         {
+            var weaponManagerCtx = new TankWeaponManagerContext(projectileManager);
+            var playerTankCtx = new TankContext(weaponManagerCtx);
+            
             var playerTank = tankConstructor.CreateTank(
                 playerSpawnPoint,
                 0, //body
@@ -41,13 +49,17 @@ namespace TankShooter.Game
                 1, //turret
                 new[]
                 {
-                    (TankWeaponSlotName.Gun, 0)
+                    (TankWeaponSlotName.Gun, 0),
+                    (TankWeaponSlotName.MachineGun, 0)
                 });
-
+            
             if (playerTank.TryGetComponent<TankController>(out var tank))
             {
                 tank.BindInputController(inputController);
-                tank.InitTank(/* TODO add player settings */);
+                tank.Init(playerTankCtx);
+                
+                playerTank.gameObject.SetLayerRecursively(LayerMask.NameToLayer("PlayerTank"));
+                tankUI.BindTankController(tank);
             }
             
             cameraController.SetTarget(playerTank.transform);
