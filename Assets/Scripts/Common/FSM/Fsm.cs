@@ -4,7 +4,7 @@ namespace TankShooter.Common.FSM
     {
         protected readonly TStateEntity entity;
         
-        protected FsmState(TStateEntity entity)
+        public FsmState(TStateEntity entity)
         {
             this.entity = entity;
         }

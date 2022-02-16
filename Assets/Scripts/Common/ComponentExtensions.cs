@@ -7,6 +7,13 @@ namespace Common
     /// </summary>
     public static class ComponentExtensions
     {
+        public static void SetLayerRecursively(this GameObject gameObject, int layer)
+        {
+            if (gameObject != null)
+                foreach (var transform in gameObject.GetComponentsInChildren<Transform>(true))
+                    transform.gameObject.layer = layer;
+        }
+        
         public static bool TryGetComponentInChildren<T>(this Component parentComponent, out T component, bool includeInactive = false)
             where T : class
         {

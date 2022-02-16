@@ -80,14 +80,16 @@ namespace Common
         {
             if (instance != null)
             {
-                if (poolsByInstances.TryGetValue(instance.GetInstanceID(), out var pool))
+                var id = instance.GetInstanceID();
+                if (poolsByInstances.TryGetValue(id, out var pool))
                 {
                     instance.transform.SetParent(pool.PoolTransform);
                     instance.gameObject.SetActive(false);
+                    poolsByInstances.Remove(id);
                 }
                 else
                 {
-                    Object.Destroy(instance);
+                    Object.Destroy(instance.gameObject);
                 }
             }
         }
