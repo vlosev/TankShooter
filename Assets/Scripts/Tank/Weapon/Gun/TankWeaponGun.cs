@@ -52,6 +52,25 @@ namespace TankShooter.Tank.Weapon.Gun
                 shotEffect.Play(true);
             }
         }
+
+        private void DoShot()
+        {
+            var projectile = ProjectileManager.GetProjectile(projectilePrefab);
+            if (projectile is IProjectile<TankWeaponGun, GunProjectileContext> contextHolder)
+            {
+                projectile.gameObject.SetActive(true);
+
+                var ctx = new GunProjectileContext(this, () => ProjectileManager.ReleaseProjectile(projectile));
+                contextHolder.Init(ctx);
+                
+                var projectileTransform = projectile.transform;
+                projectileTransform.position = shotPivot.position;
+                projectileTransform.forward = shotPivot.forward;
+                
+                PlayShotEffect();
+                PlayShotSound();
+            }
+        }
         
         #region fsm
         private class GunState : FsmState<TankWeaponGun>
@@ -102,14 +121,10 @@ namespace TankShooter.Tank.Weapon.Gun
         
         private class GunShot : GunState
         {
-            private readonly Projectile projectilePrefab;
-            private readonly ProjectileManager projectileManager;
             private float prepareToShotTime;
             
             public GunShot(TankWeaponGun entity) : base(entity)
             {
-                projectilePrefab = entity.projectilePrefab;
-                projectileManager = entity.ProjectileManager;
             }
 
             public override void OnEnter()
@@ -127,32 +142,8 @@ namespace TankShooter.Tank.Weapon.Gun
                     return this;
                 }
 
-                DoShot();
+                entity.DoShot();
                 return new GunReload(entity);
-            }
-
-            private void DoShot()
-            {
-                var projectile = projectileManager.GetProjectile(projectilePrefab);
-                var contextHolder = projectile as IProjectile<TankWeaponGun, GunProjectileContext>;  
-                if (contextHolder != null)
-                {
-                    var ctx = new GunProjectileContext(
-                        entity,
-                        () => projectileManager.ReleaseProjectile(projectile));
-                    
-                    contextHolder.Init(ctx);
-                    projectile.gameObject.SetActive(true);
-                }
-                
-                var shotTransform = entity.shotPivot;
-                
-                var projectileTransform = projectile.transform;
-                projectileTransform.position = shotTransform.position;
-                projectileTransform.forward = shotTransform.forward;
-                
-                entity.PlayShotEffect();
-                entity.PlayShotSound();
             }
         }
         
@@ -164,13 +155,17 @@ namespace TankShooter.Tank.Weapon.Gun
             {
             }
 
+            public override void OnEnter()
+            {
+                base.OnEnter();
+                reloadTime = 0;
+            }
+
             public override FsmState<TankWeaponGun> Update()
             {
                 reloadTime += Time.deltaTime;
                 if (reloadTime >= entity.reloadTime)
-                {
                     return new GunIdle(entity);
-                }
 
                 var t = Mathf.Clamp01(reloadTime / entity.reloadTime);
                 return this;

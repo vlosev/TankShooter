@@ -42,6 +42,7 @@ namespace TankShooter.Tank.Weapon.MachineGun
         [SerializeField] private AudioClip shootingClip;
         [SerializeField] private AudioClip shootingEndClip;
 
+        private int cannonIndex = 0;
         private float shotsDelay = 0f;
         private uint bulletsRemainCount;
         private Fsm<TankWeaponMachineGun> fsm;
@@ -67,6 +68,31 @@ namespace TankShooter.Tank.Weapon.MachineGun
             rotator.localEulerAngles = eulerAngles;
         }
 
+        private void DoShot()
+        {
+            var projectile = ProjectileManager.GetProjectile(bulletPrefab);
+            if (projectile is IProjectile<TankWeaponMachineGun, MachineGunBulletContext> contextHolder)
+            {
+                cannonIndex = (cannonIndex + 1) % cannons.Length;
+                var index = cannonIndex;//cannons.Length - cannonIndex;
+                
+                projectile.gameObject.SetActive(true);
+
+                var ctx = new MachineGunBulletContext(this, () => ProjectileManager.ReleaseProjectile(projectile));
+                contextHolder.Init(ctx);
+
+                var cannon = cannons[index];
+                var shotPivot = cannon.GetShotPositionTransform();
+                
+                var projectileTransform = projectile.transform;
+                projectileTransform.position = shotPivot.position;
+                projectileTransform.forward = shotPivot.forward;
+                
+                // PlayShotEffect();
+                // PlayShotSound();
+            }
+        }
+
         #region fsm
         private class GunState : FsmState<TankWeaponMachineGun>
         {
@@ -74,8 +100,7 @@ namespace TankShooter.Tank.Weapon.MachineGun
             
             protected GunState(TankWeaponMachineGun entity) : base(entity)
             {
-                Debug.Log($"[{entity.GetType().Name}] create state '{GetType().Name}'");
-
+                //Debug.Log($"[{entity.GetType().Name}] create state '{GetType().Name}'");
                 audioSource = entity.rotateSoundSource;
             }
         }
@@ -166,6 +191,8 @@ namespace TankShooter.Tank.Weapon.MachineGun
         
         private class GunShot : GunState
         {
+            private float delay = 0f;
+            
             public GunShot(TankWeaponMachineGun entity) : base(entity)
             {
             }
@@ -184,28 +211,15 @@ namespace TankShooter.Tank.Weapon.MachineGun
                 if (entity.isShooting != true)
                     return new GunStoppingShooting(entity, entity.rotationSpeed);
 
-                entity.RotateCannons(entity.rotationSpeed);
-                return base.Update();
-            }
-
-            private void DoShot()
-            {
-                //получаем снаряд из менеджера, он будет создан из пулла, чтобы не пересозадвать постоянно
-                //создаем контекст, чтобы передать туда колбэк на релиз в пул и параметры оружия, для начисления очкой и т.д.
-                var projectile = entity.ProjectileManager.GetProjectile(entity.bulletPrefab);
-                if (projectile is IProjectile<TankWeaponMachineGun, MachineGunBulletContext> projectileContextHolder)
+                delay -= Time.deltaTime;
+                if (delay <= 0f)
                 {
-                    var ctx = new MachineGunBulletContext(entity, () => entity.ProjectileManager.ReleaseProjectile(projectile));
-                    projectileContextHolder.Init(ctx);
+                    delay = entity.shotsDelay;
+                    entity.DoShot();
                 }
 
-                //TODO: сделать отсчет стволов в обратном порядке и спавнить пулю из разных
-                var cannon = entity.cannons[0];
-                var shotPositionTransform = cannon.GetShotPositionTransform();
-                
-                var projectileTransform = projectile.transform;
-                projectileTransform.position = shotPositionTransform.position;
-                projectileTransform.forward = shotPositionTransform.forward;
+                entity.RotateCannons(entity.rotationSpeed);
+                return base.Update();
             }
         }
         

@@ -23,7 +23,6 @@ namespace TankShooter.Tank.Weapon.Gun
         protected override void OnInit()
         {
             base.OnInit();
-            
             lostTime = lifeTime;
         }
 
