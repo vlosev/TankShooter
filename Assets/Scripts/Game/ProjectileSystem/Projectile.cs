@@ -42,11 +42,8 @@ namespace TankShooter.Game.Weapon
     /// </summary>
     public abstract class Projectile : NotifiableMonoBehaviour
     {
-        public Transform Transform { get; private set; }
-        
         protected sealed override void SafeAwake()
         {
-            this.Transform = transform;
             base.SafeAwake();
         }
 

@@ -50,7 +50,8 @@ namespace TankShooter.Game
                 new[]
                 {
                     (TankWeaponSlotName.Gun, 0),
-                    (TankWeaponSlotName.MachineGun, 0)
+                    (TankWeaponSlotName.MachineGun, 0),
+                    (TankWeaponSlotName.HomingMissile, 0)
                 });
             
             if (playerTank.TryGetComponent<TankController>(out var tank))
