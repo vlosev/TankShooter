@@ -15,8 +15,8 @@ TagManager:
   - Walls
   - PlayerTank
   - Enemy
-  - 
-  - 
+  - DamageCollider
+  - Bullet
   - 
   - 
   - 
